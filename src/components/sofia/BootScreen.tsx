@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import type { BootStep } from '../hooks/useFirebase';
+
+export interface BootStep {
+  id: number;
+  text: string;
+  status: 'pending' | 'active' | 'done';
+}
 
 interface BootScreenProps {
   steps: BootStep[];

@@ -36,6 +36,8 @@ export default function AnalyticsDashboard({ visible, onClose, runtime }: Analyt
 
   const rate = stats.totalMessages > 0 ? Math.round(stats.matchedCount / stats.totalMessages * 100) : 0;
 
+  if (!visible) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
       <div
