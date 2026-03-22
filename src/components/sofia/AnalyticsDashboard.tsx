@@ -11,8 +11,6 @@ interface AnalyticsDashboardProps {
 const COLORS = ['#6A1B9A', '#AD1457', '#0277BD', '#2E7D32', '#E65100', '#C62828', '#4527A0'];
 
 export default function AnalyticsDashboard({ visible, onClose, runtime }: AnalyticsDashboardProps) {
-  if (!visible) return null;
-
   const stats = runtime.stats;
   const history = runtime.history;
 
