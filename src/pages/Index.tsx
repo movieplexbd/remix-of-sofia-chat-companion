@@ -58,7 +58,7 @@ export default function SofiaChat() {
     if (result?.extraMessage) {
       // Find the last bot message and associate extra with it
       setTimeout(() => {
-        const lastBotMsg = sofia.messages.findLast(m => m.sender === 'bot');
+        const lastBotMsg = [...sofia.messages].reverse().find(m => m.sender === 'bot');
         if (lastBotMsg) {
           setExtraMessages(prev => new Map(prev).set(lastBotMsg.id, result.extraMessage));
         }
