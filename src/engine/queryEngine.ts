@@ -478,6 +478,18 @@ export function createSofiaEngine(
     // Hybrid search
     let candidates = hybridSearch(processed, correctedText, tokens, expandedToks, bm25M, tfidfM, D);
     candidates = ctxBoost(candidates);
+
+    // History-aware boost: if user is continuing a topic, boost matching category
+    if (RT.history.length >= 1) {
+      const lastCat = RT.history.at(-1)?.category;
+      if (lastCat) {
+        candidates = candidates.map(c => ({
+          ...c,
+          _score: c.item?.category === lastCat ? c._score * 1.25 : c._score,
+        }));
+      }
+    }
+
     const ranked = ensembleVote(candidates, entities, RT.memory, D.cfg);
 
     if (ranked.length) {
@@ -491,13 +503,20 @@ export function createSofiaEngine(
       updateMemory(inputText, answer, entities, winner.item.category);
       RT.lastAnswer = winner.item.answer; RT.lastUserQ = inputText;
       RT.history.push({ q: inputText, a: winner.item.answer, category: winner.item.category, time: Date.now() });
-      if (RT.history.length > 20) RT.history.shift();
+      if (RT.history.length > 30) RT.history.shift(); // increased history from 20 to 30
+
       await logAnalytics(inputText, methodStr, rawScore);
+
+      // Smart follow-ups: combine related questions + context-aware suggestions
       const related = feat(D.cfg, 'relatedQuestions') ? findRelated(winner.item, D.qa) : [];
+      const followUps = generateFollowUps(winner.item, RT.history, D.qa);
+      const smartSuggestions = [...new Set([...followUps, ...related])].slice(0, 4);
+
       return {
         answer: prefix + answer, firebaseKey: winner.item.firebaseKey,
         method: methodStr, score: rawScore, sentiment,
-        related: related.length ? related : null,
+        related: smartSuggestions.length ? smartSuggestions : null,
+        quickReplies: followUps.length ? followUps.slice(0, 2) : null,
         spellCorrected: spellResult.corrected, originalText: spellResult.original,
       };
     }
