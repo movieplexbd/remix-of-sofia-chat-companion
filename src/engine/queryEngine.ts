@@ -140,10 +140,45 @@ function ensembleVote(
 
 function memBoost(item: QAItem, memory: RuntimeState['memory']): number {
   let b = 1;
-  memory.topics.slice(-3).forEach(t => {
-    if (item.category === t || (item.tags || []).includes(t)) b += 0.2;
+  // Recent topics get higher boost (recency weighting)
+  const recentTopics = memory.topics.slice(-5);
+  recentTopics.forEach((t, i) => {
+    const recencyWeight = 0.1 + (i / recentTopics.length) * 0.25; // newer = more boost
+    if (item.category === t) b += recencyWeight;
+    if ((item.tags || []).some(tag => tag === t)) b += recencyWeight * 0.6;
+  });
+  // Entity match boost
+  Object.values(memory.entities).forEach(vals => {
+    const itemText = (item.originalQuestions || []).join(' ') + ' ' + item.answer;
+    vals.forEach(v => { if (itemText.toLowerCase().includes(v.toLowerCase())) b += 0.15; });
   });
   return b;
+}
+
+/** Generate smart follow-up questions based on context */
+function generateFollowUps(
+  item: QAItem, history: RuntimeState['history'], qa: QAItem[]
+): string[] {
+  const followUps: string[] = [];
+  // Same category questions user hasn't asked
+  const askedQs = new Set(history.map(h => h.q.toLowerCase()));
+  const sameCat = qa.filter(q =>
+    q.category === item.category &&
+    q.firebaseKey !== item.firebaseKey &&
+    !(q.originalQuestions || []).some(oq => askedQs.has(oq.toLowerCase()))
+  );
+  // Pick up to 3 related unasked questions
+  const wt = tokenize((item.processedQuestions || []).join(' '));
+  sameCat
+    .map(q => ({
+      q, score: jaccard(wt, tokenize((q.processedQuestions || []).join(' ')))
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .filter(x => x.score > 0.05)
+    .forEach(x => followUps.push((x.q.originalQuestions || ['?'])[0]));
+
+  return followUps;
 }
 
 function findRelated(item: QAItem, qa: QAItem[], topN = 3): string[] {
