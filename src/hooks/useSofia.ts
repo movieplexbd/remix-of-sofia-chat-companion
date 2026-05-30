@@ -129,6 +129,11 @@ export function useSofia(data: DataStore | null, db: Database | null) {
     rt.history = [];
     rt.activeCtx = { name: null, lifespan: 0 };
     rt.memory = { topics: [], entities: {}, preferences: {} };
+    rt.lastAnswer = null; rt.lastUserQ = null;
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(MSG_STORAGE_KEY);
+    } catch { /* skip */ }
     setMessages([{
       id: makeId(), sender: 'bot', text: '👋 চ্যাট পরিষ্কার! নতুন কথা শুরু করো।',
       timestamp: new Date(),
