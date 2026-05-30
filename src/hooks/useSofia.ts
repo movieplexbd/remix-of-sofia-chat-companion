@@ -1,17 +1,44 @@
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { createSofiaEngine, chunkAnswer, type ReplyResult } from '../engine/queryEngine';
 import type { DataStore, RuntimeState, Message } from '../types/sofia';
 import type { Database } from 'firebase/database';
 
+const STORAGE_KEY = 'sofia_runtime_v1';
+const MSG_STORAGE_KEY = 'sofia_messages_v1';
+
+function loadPersistedRuntime(): Partial<RuntimeState> | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch { return null; }
+}
+
+function persistRuntime(rt: RuntimeState) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      userName: rt.userName,
+      history: rt.history.slice(-30),
+      memory: rt.memory,
+      personality: rt.personality,
+      stats: rt.stats,
+    }));
+  } catch { /* quota */ }
+}
+
 function createInitialRuntime(): RuntimeState {
+  const persisted = loadPersistedRuntime();
   return {
-    state: 'normal', learningQ: null, userName: null,
-    history: [], activeCtx: { name: null, lifespan: 0 },
-    memory: { topics: [], entities: {}, preferences: {} },
-    personality: 'friendly', initialized: false,
+    state: 'normal', learningQ: null,
+    userName: persisted?.userName ?? null,
+    history: persisted?.history ?? [],
+    activeCtx: { name: null, lifespan: 0 },
+    memory: persisted?.memory ?? { topics: [], entities: {}, preferences: {} },
+    personality: persisted?.personality ?? 'friendly',
+    initialized: false,
     lastAnswer: null, lastUserQ: null,
     sessionId: Date.now().toString(36),
-    stats: { totalMessages: 0, matchedCount: 0, noMatchCount: 0, avgScore: 0 },
+    stats: persisted?.stats ?? { totalMessages: 0, matchedCount: 0, noMatchCount: 0, avgScore: 0 },
   };
 }
 
@@ -20,9 +47,21 @@ function makeId() { return `msg_${Date.now()}_${++msgCounter}`; }
 
 export function useSofia(data: DataStore | null, db: Database | null) {
   const rtRef = useRef<RuntimeState>(createInitialRuntime());
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    try {
+      const raw = localStorage.getItem(MSG_STORAGE_KEY);
+      if (!raw) return [];
+      return (JSON.parse(raw) as Message[]).map(m => ({ ...m, timestamp: new Date(m.timestamp) }));
+    } catch { return []; }
+  });
   const [isTyping, setIsTyping] = useState(false);
-  const [personality, setPersonalityState] = useState('friendly');
+  const [personality, setPersonalityState] = useState(rtRef.current.personality);
+
+  // Persist messages + runtime memory after each update
+  useEffect(() => {
+    try { localStorage.setItem(MSG_STORAGE_KEY, JSON.stringify(messages.slice(-100))); } catch { /* quota */ }
+    persistRuntime(rtRef.current);
+  }, [messages]);
 
   const engine = useMemo(() => {
     if (!data) return null;
@@ -90,6 +129,11 @@ export function useSofia(data: DataStore | null, db: Database | null) {
     rt.history = [];
     rt.activeCtx = { name: null, lifespan: 0 };
     rt.memory = { topics: [], entities: {}, preferences: {} };
+    rt.lastAnswer = null; rt.lastUserQ = null;
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(MSG_STORAGE_KEY);
+    } catch { /* skip */ }
     setMessages([{
       id: makeId(), sender: 'bot', text: '👋 চ্যাট পরিষ্কার! নতুন কথা শুরু করো।',
       timestamp: new Date(),

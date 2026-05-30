@@ -230,29 +230,34 @@ function getContextualInput(text: string, history: RuntimeState['history'], enab
   const lower = text.toLowerCase().trim();
   const words = lower.split(/\s+/);
   const short = words.length <= 5;
+  const veryShort = words.length <= 2;
 
   // Follow-up keywords — user wants more about same topic
-  const followUps = ['আরো', 'বিস্তারিত', 'আরও', 'বলো', 'বলুন', 'কেন', 'কীভাবে', 'কিভাবে', 'explain', 'details', 'why', 'how', 'উদাহরণ', 'আর', 'more', 'example', 'কি', 'সেটা', 'ওটা', 'এটা', 'আরেকটু', 'কিরকম', 'মানে', 'meaning', 'বুঝিয়ে', 'তাহলে', 'then', 'so', 'অর্থ'];
+  const followUps = ['আরো', 'বিস্তারিত', 'আরও', 'বলো', 'বলুন', 'কেন', 'কীভাবে', 'কিভাবে', 'explain', 'details', 'why', 'how', 'উদাহরণ', 'আর', 'more', 'example', 'আরেকটু', 'কিরকম', 'মানে', 'meaning', 'বুঝিয়ে', 'তাহলে', 'then', 'so', 'অর্থ', 'আবার', 'again', 'repeat', 'বুঝলাম না'];
   if (short && followUps.some(f => lower.includes(f))) {
-    const recent = history.slice(-3).map(h => h.q).join(' ');
+    const recent = history.slice(-3).map(h => h.q + ' ' + h.category).join(' ');
     return recent + ' ' + text;
   }
 
-  // Pronouns referring to previous topic
-  const pronouns = ['সেটা', 'ওটা', 'এটা', 'it', 'that', 'this', 'সে', 'ঐটা', 'তার', 'এর', 'ওর', 'ঐ', 'its', 'these', 'those'];
-  if (short && pronouns.some(p => lower.includes(p))) {
-    const recentQ = history.at(-1)?.q || '';
-    const recentCat = history.at(-1)?.category || '';
-    return recentQ + ' ' + recentCat + ' ' + text;
+  // Pronouns referring to previous topic — last 2 turns for richer context
+  const pronouns = ['সেটা', 'ওটা', 'এটা', 'it', 'that', 'this', 'সে', 'ঐটা', 'তার', 'এর', 'ওর', 'ঐ', 'its', 'these', 'those', 'তাদের', 'তাকে', 'উনি', 'উনার', 'যেটা', 'এটার', 'ওটার'];
+  if (short && pronouns.some(p => lower.split(/\s+/).includes(p))) {
+    const last2 = history.slice(-2);
+    return last2.map(h => h.q).join(' ') + ' ' + last2.map(h => h.category).join(' ') + ' ' + text;
   }
 
-  // Topic continuation — if new question shares words with recent history
+  // Very short queries — likely continuation
+  if (veryShort && history.length >= 1) {
+    const lastH = history.at(-1)!;
+    return lastH.q + ' ' + lastH.category + ' ' + text;
+  }
+
+  // Topic continuation — overlap with recent history
   if (history.length >= 1) {
-    const recentTokens = tokenize(history.slice(-2).map(h => h.q).join(' '));
+    const recentTokens = tokenize(history.slice(-3).map(h => h.q).join(' '));
     const currentTokens = tokenize(text);
     const overlap = currentTokens.filter(t => recentTokens.includes(t));
     if (overlap.length > 0 && short) {
-      // Enrich with last question's context
       return history.at(-1)!.q + ' ' + text;
     }
   }
