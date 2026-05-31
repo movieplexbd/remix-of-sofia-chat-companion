@@ -13,6 +13,7 @@ import type { QAItem, DataStore, RuntimeState, AnalyticsEntry } from '../types/s
 import { PERSONALITIES } from '../constants/personalities';
 import { getDatabase, ref, get, push, set, update, serverTimestamp } from 'firebase/database';
 import type { Database } from 'firebase/database';
+import { createIntelligence, type RawCandidate, type EngineName } from './intelligence';
 
 // Helper functions
 const feat = (cfg: DataStore['cfg'], k: string) => cfg.features?.[k] !== false;
