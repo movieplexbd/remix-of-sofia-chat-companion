@@ -294,6 +294,7 @@ export interface SofiaEngine {
   tfidfM: TFIDFModel | null;
   coMatrix: CoMatrix;
   rebuildModels: () => void;
+  intel: ReturnType<typeof createIntelligence>;
 }
 
 export function createSofiaEngine(
