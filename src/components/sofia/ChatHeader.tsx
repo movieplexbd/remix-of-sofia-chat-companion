@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import {
   FaBroom, FaChartBar, FaCircleInfo, FaMagnifyingGlass,
   FaMoon, FaSun, FaFileExport, FaChartPie, FaEllipsisVertical,
-  FaArrowLeft, FaLanguage
+  FaArrowLeft, FaLanguage, FaGear,
 } from 'react-icons/fa6';
+import { Link } from 'react-router-dom';
 import type { Lang } from '../../constants/i18n';
 
 interface ChatHeaderProps {
@@ -104,6 +105,14 @@ export default function ChatHeader({
                 {item.label}
               </button>
             ))}
+            <Link
+              to="/admin"
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm hover:bg-muted transition-colors text-left border-t border-border"
+            >
+              <span className="text-primary"><FaGear size={14} /></span>
+              {lang === 'bn' ? 'অ্যাডমিন প্যানেল' : 'Admin Panel'}
+            </Link>
           </div>
         )}
       </div>
