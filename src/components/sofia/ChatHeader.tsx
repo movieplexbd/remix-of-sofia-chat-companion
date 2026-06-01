@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import {
   FaBroom, FaChartBar, FaCircleInfo, FaMagnifyingGlass,
   FaMoon, FaSun, FaFileExport, FaChartPie, FaEllipsisVertical,
-  FaArrowLeft, FaLanguage
+  FaArrowLeft, FaLanguage, FaGear,
 } from 'react-icons/fa6';
+import { Link } from 'react-router-dom';
 import type { Lang } from '../../constants/i18n';
 
 interface ChatHeaderProps {
