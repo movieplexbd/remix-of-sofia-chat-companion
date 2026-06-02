@@ -1,23 +1,12 @@
 import { useRef, useState, useMemo } from 'react';
-import { Upload, FileCheck2, AlertCircle, FileDown, Wand2, Globe, GitMerge, Trash2 } from 'lucide-react';
+import { Upload, FileCheck2, AlertCircle, FileDown, Wand2, Globe, GitMerge, Trash2, Copy, Check, Sparkles, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Section, Stat } from './Stat';
 import { parseDataset, dedupAgainst, type ParseResult } from '../../lib/parseDataset';
+import { DATASET_EXAMPLES, STARTER_DATASET } from '../../lib/datasetExamples';
 import type { useAdmin, QARecord } from '../../hooks/useAdmin';
 
 type Admin = ReturnType<typeof useAdmin>;
-
-const SAMPLE_JSON = `[
-  {
-    "questions": ["Tumi ke?", "তুমি কে?", "Who are you?"],
-    "answer": "আমি Sofia, তোমার AI সঙ্গী।",
-    "category": "intro",
-    "tags": ["greeting"]
-  }
-]`;
-const SAMPLE_CSV = `question,answer,category,tags
-"Tumi ke?","আমি Sofia।","intro","greeting"`;
-const SAMPLE_CONV = `{"messages":[{"role":"user","content":"Tumi ke?"},{"role":"assistant","content":"আমি Sofia।"}]}`;
 
 export default function BulkTab({ admin }: { admin: Admin }) {
   const fileRef = useRef<HTMLInputElement>(null);
