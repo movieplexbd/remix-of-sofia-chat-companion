@@ -1,23 +1,12 @@
 import { useRef, useState, useMemo } from 'react';
-import { Upload, FileCheck2, AlertCircle, FileDown, Wand2, Globe, GitMerge, Trash2 } from 'lucide-react';
+import { Upload, FileCheck2, AlertCircle, FileDown, Wand2, Globe, GitMerge, Trash2, Copy, Check, Sparkles, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Section, Stat } from './Stat';
 import { parseDataset, dedupAgainst, type ParseResult } from '../../lib/parseDataset';
+import { DATASET_EXAMPLES, STARTER_DATASET } from '../../lib/datasetExamples';
 import type { useAdmin, QARecord } from '../../hooks/useAdmin';
 
 type Admin = ReturnType<typeof useAdmin>;
-
-const SAMPLE_JSON = `[
-  {
-    "questions": ["Tumi ke?", "তুমি কে?", "Who are you?"],
-    "answer": "আমি Sofia, তোমার AI সঙ্গী।",
-    "category": "intro",
-    "tags": ["greeting"]
-  }
-]`;
-const SAMPLE_CSV = `question,answer,category,tags
-"Tumi ke?","আমি Sofia।","intro","greeting"`;
-const SAMPLE_CONV = `{"messages":[{"role":"user","content":"Tumi ke?"},{"role":"assistant","content":"আমি Sofia।"}]}`;
 
 export default function BulkTab({ admin }: { admin: Admin }) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -192,13 +181,12 @@ export default function BulkTab({ admin }: { admin: Admin }) {
           <Wand2 className="w-4 h-4" /> Parse text
         </button>
 
-        <details className="text-xs">
-          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Show format examples</summary>
-          <pre className="mt-2 p-3 bg-muted rounded text-[11px] overflow-x-auto">{SAMPLE_JSON}</pre>
-          <pre className="mt-2 p-3 bg-muted rounded text-[11px] overflow-x-auto">{SAMPLE_CSV}</pre>
-          <pre className="mt-2 p-3 bg-muted rounded text-[11px] overflow-x-auto">{SAMPLE_CONV}</pre>
-        </details>
       </Section>
+
+      <DatasetExampleLibrary
+        onUseSample={(content) => { setRawText(content); toast.success('Sample loaded — scroll up and click "Parse text"'); }}
+        onLoadStarter={() => { setRawText(STARTER_DATASET); toast.success('10-record starter loaded — scroll up and parse'); }}
+      />
 
       {preview && dedup && (
         <Section title={`Preview: ${preview.items.length} parsed`} desc={`Format: ${preview.format} · Skipped while parsing: ${preview.skipped}`}>
@@ -307,5 +295,105 @@ export default function BulkTab({ admin }: { admin: Admin }) {
         </Section>
       )}
     </div>
+  );
+}
+
+/* -------------------------------------------------------------
+ * Dataset Example Library
+ * Renders every supported format as a copyable card.
+ * ------------------------------------------------------------- */
+function DatasetExampleLibrary({
+  onUseSample, onLoadStarter,
+}: { onUseSample: (content: string) => void; onLoadStarter: () => void }) {
+  const [copied, setCopied] = useState<string | null>(null);
+  const [active, setActive] = useState<string>(DATASET_EXAMPLES[0].id);
+  const current = DATASET_EXAMPLES.find(e => e.id === active)!;
+
+  async function copy(id: string, content: string) {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(id);
+      toast.success('Copied to clipboard');
+      setTimeout(() => setCopied(null), 1500);
+    } catch {
+      toast.error('Copy failed — select and copy manually');
+    }
+  }
+
+  function download(ex: typeof DATASET_EXAMPLES[number]) {
+    const blob = new Blob([ex.content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `sofia-sample-${ex.id}${ex.ext}`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+
+  return (
+    <Section
+      title="Dataset Format Library"
+      desc="প্রতিটা format-এর জন্য ready-to-copy example। Copy করে edit করো, তারপর উপরে paste / upload করো।"
+      action={
+        <button
+          onClick={onLoadStarter}
+          className="px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm flex items-center gap-1.5"
+        >
+          <Sparkles className="w-4 h-4" /> Load 10-record starter
+        </button>
+      }
+    >
+      {/* Tab strip */}
+      <div className="flex flex-wrap gap-1.5">
+        {DATASET_EXAMPLES.map(ex => (
+          <button
+            key={ex.id}
+            onClick={() => setActive(ex.id)}
+            className={`px-2.5 py-1 rounded-md text-xs font-medium transition ${
+              active === ex.id
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+            }`}
+          >
+            {ex.title}
+          </button>
+        ))}
+      </div>
+
+      {/* Active example */}
+      <div className="rounded-lg border border-border overflow-hidden bg-muted/30">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-card/50">
+          <div className="min-w-0">
+            <div className="text-sm font-semibold flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
+              {current.title}
+              <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-mono">{current.format}</span>
+            </div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">{current.desc}</div>
+          </div>
+          <div className="flex gap-1 flex-shrink-0">
+            <button
+              onClick={() => copy(current.id, current.content)}
+              className="px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-xs flex items-center gap-1.5"
+            >
+              {copied === current.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied === current.id ? 'Copied' : 'Copy'}
+            </button>
+            <button
+              onClick={() => onUseSample(current.content)}
+              className="px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground text-xs flex items-center gap-1.5"
+            >
+              <Wand2 className="w-3.5 h-3.5" /> Use
+            </button>
+            <button
+              onClick={() => download(current)}
+              className="px-2.5 py-1 rounded-md bg-muted text-xs flex items-center gap-1.5"
+              title="Download as file"
+            >
+              <FileDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+        <pre className="p-3 text-[11px] font-mono overflow-x-auto max-h-72 leading-relaxed">{current.content}</pre>
+      </div>
+    </Section>
   );
 }

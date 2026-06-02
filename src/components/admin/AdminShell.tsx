@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 import {
   LayoutDashboard, MessageSquarePlus, Upload, BookA, Brain,
   Tag, Settings, BarChart3, Lightbulb, ArrowLeft, Database, LogOut,
-  Wrench, Save,
+  Wrench, Save, Brain as BrainIcon,
 } from 'lucide-react';
 
 export type AdminTab =
   | 'dashboard' | 'qa' | 'bulk' | 'synonyms' | 'intents'
   | 'entities' | 'config' | 'analytics' | 'insights'
-  | 'power' | 'backup';
+  | 'power' | 'backup' | 'trainer';
 
 interface Props {
   active: AdminTab;
@@ -22,6 +22,7 @@ const TABS: { id: AdminTab; label: string; icon: any }[] = [
   { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
   { id: 'qa', label: 'QA Manager', icon: MessageSquarePlus },
   { id: 'bulk', label: 'Bulk Upload', icon: Upload },
+  { id: 'trainer', label: 'Auto-Trainer', icon: BrainIcon },
   { id: 'power', label: 'Power Tools', icon: Wrench },
   { id: 'backup', label: 'Backup', icon: Save },
   { id: 'synonyms', label: 'Synonyms', icon: BookA },
