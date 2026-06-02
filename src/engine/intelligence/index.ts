@@ -56,8 +56,8 @@ export interface IntelligenceAPI {
   recordIgnore:  (q: string, key: string | null, engines: string[]) => void;
 
   // Suggestions (Phase 12)
-  getSuggestions: (prefix: string, allQA: Array<{ originalQuestions: string[] }>) => string[];
-  getTrending: () => string[];
+  getSuggestions: (prefix: string, allQA: Array<{ originalQuestions: string[] }>, limit?: number) => string[];
+  getTrending: (limit?: number) => string[];
   recordQuery: (query: string) => void;
 
   // Knowledge building (Phase 11)
