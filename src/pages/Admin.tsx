@@ -10,6 +10,7 @@ import AnalyticsTab from '../components/admin/AnalyticsTab';
 import InsightsTab from '../components/admin/InsightsTab';
 import PowerToolsTab from '../components/admin/PowerToolsTab';
 import BackupTab from '../components/admin/BackupTab';
+import AutoTrainerTab from '../components/admin/AutoTrainerTab';
 import { useAdmin } from '../hooks/useAdmin';
 import { Toaster } from 'sonner';
 
