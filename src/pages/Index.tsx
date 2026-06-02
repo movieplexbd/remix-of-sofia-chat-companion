@@ -10,8 +10,11 @@ import AnalyticsDashboard from '../components/sofia/AnalyticsDashboard';
 import { useFirebase } from '../hooks/useFirebase';
 import { useSofia } from '../hooks/useSofia';
 import { t, type Lang } from '../constants/i18n';
-import type { Message } from '../types/sofia';
+import type { Message, SofiaCharacter, SofiaSlide } from '../types/sofia';
 import { Toaster, toast } from 'sonner';
+import Onboarding from '../components/sofia/Onboarding';
+import CharacterSelector from '../components/sofia/CharacterSelector';
+import ImageSlideSection from '../components/sofia/ImageSlideSection';
 
 export default function SofiaChat() {
   const { data, loading, error, bootSteps, bootProgress, db, handleFeedback } = useFirebase();
@@ -138,6 +141,31 @@ export default function SofiaChat() {
     toast(`🎭 ${p}`);
   }, [sofia]);
 
+  const handleOnboardingComplete = useCallback((userData: { name: string; age: string; gender: string }) => {
+    sofia.runtime.userName = userData.name;
+    sofia.runtime.userAge = userData.age;
+    sofia.runtime.userGender = userData.gender;
+    toast(`👋 স্বাগতম, ${userData.name}!`);
+    // Force re-render if needed, though runtime is a ref, 
+    // we might need a state update to trigger UI refresh for the onboarding overlay
+    setLang(l => l); 
+  }, [sofia]);
+
+  const handleCharacterSelect = useCallback((char: SofiaCharacter) => {
+    sofia.runtime.selectedCharacter = char.name;
+    toast(`🎭 চরিত্র: ${char.name}`);
+    setLang(l => l);
+  }, [sofia]);
+
+  const handleSlideSelect = useCallback((slide: SofiaSlide) => {
+    sofia.runtime.selectedSlideId = slide.id;
+    if (slide.memoryData) {
+      sofia.runtime.memory.preferences.selectedSlideData = slide.memoryData;
+    }
+    toast(`🖼️ ${slide.heading} সিলেক্ট করা হয়েছে`);
+    setLang(l => l);
+  }, [sofia]);
+
   const lowConf = data?.cfg.thresholds?.lowConfidence || 35;
   const highConf = data?.cfg.thresholds?.highConfidence || 70;
 
@@ -167,6 +195,10 @@ export default function SofiaChat() {
       <Toaster position="bottom-center" />
       <BootScreen steps={bootSteps} progress={bootProgress} visible={loading} />
 
+      {!loading && !sofia.runtime.userName && (
+        <Onboarding onComplete={handleOnboardingComplete} />
+      )}
+
       {!loading && (
         <>
           <ChatHeader
@@ -185,6 +217,18 @@ export default function SofiaChat() {
             lang={lang}
             onToggleLang={() => setLang(l => l === 'bn' ? 'en' : 'bn')}
             matchBadge={matchBadge}
+          />
+
+          <CharacterSelector 
+            characters={data?.characters || []} 
+            selectedId={data?.characters?.find(c => c.name === sofia.runtime.selectedCharacter)?.id || null}
+            onSelect={handleCharacterSelect}
+          />
+
+          <ImageSlideSection 
+            slides={data?.slides || []}
+            selectedId={sofia.runtime.selectedSlideId}
+            onSelect={handleSlideSelect}
           />
 
           <PersonalityBar active={sofia.personality} onSelect={handlePersonalityChange} />

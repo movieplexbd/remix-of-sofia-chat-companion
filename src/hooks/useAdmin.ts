@@ -13,11 +13,12 @@ const db = getDatabase(app);
 export type CollectionName =
   | 'qaData' | 'synonymMap' | 'intents' | 'contextRules'
   | 'entities' | 'responseTemplates' | 'sentimentLexicon'
-  | 'botConfig' | 'spellCorrections';
+  | 'botConfig' | 'spellCorrections' | 'characters' | 'slides';
 
 export const ALL_COLLECTIONS: CollectionName[] = [
   'qaData','synonymMap','intents','contextRules','entities',
   'responseTemplates','sentimentLexicon','botConfig','spellCorrections',
+  'characters', 'slides',
 ];
 
 export interface QARecord {
@@ -161,6 +162,7 @@ export function useAdmin() {
     db, busy, error, all, reload,
     addQA, updateQA, deleteQA, bulkAddQA, bulkDeleteQA, bulkUpdateCategory, mergeIntoQA, findReplace,
     setNode, removeNode, updateNode,
+    updatePath: updateNode,
     snapshot, restore,
   };
 }

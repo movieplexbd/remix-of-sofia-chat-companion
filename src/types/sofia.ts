@@ -19,6 +19,20 @@ export interface BotConfig {
   features: Record<string, boolean>;
 }
 
+export interface SofiaCharacter {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface SofiaSlide {
+  id: string;
+  heading: string;
+  image1: string;
+  image2: string;
+  memoryData: string;
+}
+
 export interface DataStore {
   qa: QAItem[];
   syn: Record<string, string[]>;
@@ -29,12 +43,18 @@ export interface DataStore {
   spell: Record<string, string>;
   sent: { positive: string[]; negative: string[]; urgent: string[]; confused: string[] };
   cfg: BotConfig;
+  characters?: SofiaCharacter[];
+  slides?: SofiaSlide[];
 }
 
 export interface RuntimeState {
   state: 'normal' | 'asking_teach' | 'awaiting_answer';
   learningQ: string | null;
   userName: string | null;
+  userAge: string | null;
+  userGender: string | null;
+  selectedCharacter: string | null;
+  selectedSlideId: string | null;
   history: Array<{ q: string; a: string; category: string; time: number }>;
   activeCtx: { name: string | null; lifespan: number };
   memory: { topics: string[]; entities: Record<string, string[]>; preferences: Record<string, unknown> };

@@ -9,7 +9,7 @@ import {
 export type AdminTab =
   | 'dashboard' | 'qa' | 'bulk' | 'synonyms' | 'intents'
   | 'entities' | 'config' | 'analytics' | 'insights'
-  | 'power' | 'backup' | 'trainer';
+  | 'power' | 'backup' | 'trainer' | 'characters' | 'slides';
 
 interface Props {
   active: AdminTab;
@@ -31,6 +31,8 @@ const TABS: { id: AdminTab; label: string; icon: any }[] = [
   { id: 'config', label: 'Config', icon: Settings },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'insights', label: 'Insights', icon: Lightbulb },
+  { id: 'characters', label: 'Characters', icon: Tag },
+  { id: 'slides', label: 'Slides', icon: LayoutDashboard },
 ];
 
 export default function AdminShell({ active, onSelect, onLogout, children }: Props) {

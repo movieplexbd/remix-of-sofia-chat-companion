@@ -18,6 +18,10 @@ function persistRuntime(rt: RuntimeState) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       userName: rt.userName,
+      userAge: rt.userAge,
+      userGender: rt.userGender,
+      selectedCharacter: rt.selectedCharacter,
+      selectedSlideId: rt.selectedSlideId,
       history: rt.history.slice(-30),
       memory: rt.memory,
       personality: rt.personality,
@@ -31,6 +35,10 @@ function createInitialRuntime(): RuntimeState {
   return {
     state: 'normal', learningQ: null,
     userName: persisted?.userName ?? null,
+    userAge: (persisted as any)?.userAge ?? null,
+    userGender: (persisted as any)?.userGender ?? null,
+    selectedCharacter: (persisted as any)?.selectedCharacter ?? null,
+    selectedSlideId: (persisted as any)?.selectedSlideId ?? null,
     history: persisted?.history ?? [],
     activeCtx: { name: null, lifespan: 0 },
     memory: persisted?.memory ?? { topics: [], entities: {}, preferences: {} },

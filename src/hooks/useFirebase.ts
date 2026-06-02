@@ -62,8 +62,9 @@ export function useFirebase() {
         await new Promise(r => setTimeout(r, 200));
 
         const paths = ['qaData', 'synonymMap', 'intents', 'contextRules', 'entities', 'responseTemplates', 'sentimentLexicon', 'botConfig', 'spellCorrections'];
-        const snaps = await Promise.all(paths.map(p => get(ref(db, p))));
-        const [qaS, synS, intS, ctxS, entS, tplS, sentS, cfgS, spellS] = snaps;
+        const allPaths = [...paths, 'characters', 'slides'];
+        const snaps = await Promise.all(allPaths.map(p => get(ref(db, p))));
+        const [qaS, synS, intS, ctxS, entS, tplS, sentS, cfgS, spellS, charS, slideS] = snaps;
 
         if (cancelled) return;
         updateStep(2, 30);
@@ -105,7 +106,18 @@ export function useFirebase() {
         await new Promise(r => setTimeout(r, 200));
 
         if (cancelled) return;
-        setData({ qa, syn, int, ctx, ent, tpl, spell, sent: sentLex, cfg });
+        
+        const characters = charS.exists() ? Object.entries(charS.val()).map(([k, v]: [string, any]) => ({ id: k, ...v })) : [
+          { id: '1', name: '১.বান্ধবী' },
+          { id: '2', name: '২.বউ' },
+          { id: '3', name: '৩.গার্লফেন্ড' },
+          { id: '4', name: '৪.মামি' },
+          { id: '5', name: '৫.Others' }
+        ];
+        
+        const slides = slideS.exists() ? Object.entries(slideS.val()).map(([k, v]: [string, any]) => ({ id: k, ...v })) : [];
+
+        setData({ qa, syn, int, ctx, ent, tpl, spell, sent: sentLex, cfg, characters, slides });
         setBootProgress(100);
         setBootSteps(prev => prev.map(s => ({ ...s, status: 'done' as const })));
         setTimeout(() => setLoading(false), 400);

@@ -216,14 +216,27 @@ function getTpl(tpl: DataStore['tpl'], type: string, vars: Record<string, string
   return t;
 }
 
-function applyPersonality(answer: string, personality: string): string {
-  const p = PERSONALITIES[personality] || PERSONALITIES.friendly;
-  if (personality === 'concise') {
-    const lines = answer.split('\n').filter(Boolean);
-    if (lines.length > 4) return lines.slice(0, 4).join('\n') + '...';
-    if (answer.length > 200) return answer.substring(0, 200) + '...';
+function applyPlaceholders(text: string, RT: RuntimeState): string {
+  let result = text;
+  if (RT.userName) {
+    result = result.replace(/\[name\]/g, RT.userName);
   }
-  return (p.prefix || '') + answer;
+  if (RT.selectedCharacter) {
+    result = result.replace(/\[character\]/g, RT.selectedCharacter);
+  }
+  return result;
+}
+
+function applyPersonality(answer: string, personality: string, RT: RuntimeState): string {
+  const p = PERSONALITIES[personality] || PERSONALITIES.friendly;
+  let result = answer;
+  if (personality === 'concise') {
+    const lines = result.split('\n').filter(Boolean);
+    if (lines.length > 4) result = lines.slice(0, 4).join('\n') + '...';
+    else if (result.length > 200) result = result.substring(0, 200) + '...';
+  }
+  result = applyPlaceholders(result, RT);
+  return (p.prefix || '') + result;
 }
 
 function getContextualInput(text: string, history: RuntimeState['history'], enabled: boolean): string {
@@ -528,7 +541,7 @@ export function createSofiaEngine(
       const rawScore = Math.min(Math.round(winner.finalScore), 99);
       const methodStr = [...new Set(winner.methods)].slice(0, 3).join('+');
       let answer = wrapResponse(winner.item.answer, rawScore);
-      answer = applyPersonality(answer, RT.personality);
+      answer = applyPersonality(answer, RT.personality, RT);
       const prefix = SENT_PREFIXES[sentiment] || '';
       updateContext(null, winner.item.category);
       updateMemory(inputText, answer, entities, winner.item.category);

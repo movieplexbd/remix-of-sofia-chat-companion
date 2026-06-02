@@ -11,6 +11,8 @@ import InsightsTab from '../components/admin/InsightsTab';
 import PowerToolsTab from '../components/admin/PowerToolsTab';
 import BackupTab from '../components/admin/BackupTab';
 import AutoTrainerTab from '../components/admin/AutoTrainerTab';
+import CharactersTab from '../components/admin/CharactersTab';
+import SlidesTab from '../components/admin/SlidesTab';
 import { useAdmin } from '../hooks/useAdmin';
 import { startAutoTrainer, stopAutoTrainer } from '../engine/intelligence/autoTrainer';
 import { Toaster } from 'sonner';
@@ -54,6 +56,8 @@ export default function Admin() {
           : tab === 'config' ? <ConfigTab admin={admin} />
           : tab === 'analytics' ? <AnalyticsTab admin={admin} />
           : tab === 'insights' ? <InsightsTab admin={admin} />
+          : tab === 'characters' ? <CharactersTab admin={admin} />
+          : tab === 'slides' ? <SlidesTab admin={admin} />
           : null}
       </AdminShell>
     </>
