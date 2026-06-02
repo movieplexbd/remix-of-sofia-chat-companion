@@ -181,13 +181,12 @@ export default function BulkTab({ admin }: { admin: Admin }) {
           <Wand2 className="w-4 h-4" /> Parse text
         </button>
 
-        <details className="text-xs">
-          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Show format examples</summary>
-          <pre className="mt-2 p-3 bg-muted rounded text-[11px] overflow-x-auto">{SAMPLE_JSON}</pre>
-          <pre className="mt-2 p-3 bg-muted rounded text-[11px] overflow-x-auto">{SAMPLE_CSV}</pre>
-          <pre className="mt-2 p-3 bg-muted rounded text-[11px] overflow-x-auto">{SAMPLE_CONV}</pre>
-        </details>
       </Section>
+
+      <DatasetExampleLibrary
+        onUseSample={(content) => { setRawText(content); toast.success('Sample loaded — scroll up and click "Parse text"'); }}
+        onLoadStarter={() => { setRawText(STARTER_DATASET); toast.success('10-record starter loaded — scroll up and parse'); }}
+      />
 
       {preview && dedup && (
         <Section title={`Preview: ${preview.items.length} parsed`} desc={`Format: ${preview.format} · Skipped while parsing: ${preview.skipped}`}>
