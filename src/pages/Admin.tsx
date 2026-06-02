@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AdminShell, { type AdminTab } from '../components/admin/AdminShell';
 import AdminLogin, { isUnlocked, lock } from '../components/admin/AdminLogin';
 import DashboardTab from '../components/admin/DashboardTab';
@@ -12,12 +12,23 @@ import PowerToolsTab from '../components/admin/PowerToolsTab';
 import BackupTab from '../components/admin/BackupTab';
 import AutoTrainerTab from '../components/admin/AutoTrainerTab';
 import { useAdmin } from '../hooks/useAdmin';
+import { startAutoTrainer, stopAutoTrainer } from '../engine/intelligence/autoTrainer';
 import { Toaster } from 'sonner';
 
 export default function Admin() {
   const [unlocked, setUnlocked] = useState(isUnlocked());
   const [tab, setTab] = useState<AdminTab>('dashboard');
   const admin = useAdmin();
+
+  // Boot the self-training scheduler while admin is open
+  useEffect(() => {
+    if (!unlocked) return;
+    startAutoTrainer({
+      getQA: () => admin.all.qaData || {},
+      applyVariant: (key, variants) => admin.mergeIntoQA(key, variants),
+    });
+    return () => stopAutoTrainer();
+  }, [unlocked, admin]);
 
   if (!unlocked) return <AdminLogin onUnlock={() => setUnlocked(true)} />;
 
