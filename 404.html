@@ -4,13 +4,21 @@
     <meta charset="utf-8">
     <title>Sofi - React Companion</title>
     <script type="text/javascript">
-      var segmentsToKeep = 1;
+      // Single Page Apps for GitHub Pages
+      // https://github.com/rafgraph/spa-github-pages
+      // This script takes the current url and converts the path and query
+      // string into just a query string, and then redirects the browser
+      // to the new url with only a query string and hash fragment,
+      // e.g. http://www.foo.tld/one/two?a=b#c --> http://www.foo.tld/?/one/two&a=b#c
+      // For a custom domain, use segmentCount = 0.
+      // For [username].github.io/[repo-name], use segmentCount = 1.
+      var segmentCount = 1;
       var l = window.location;
       l.replace(
-        l.protocol + '//' + l.host + '/' +
-        l.pathname.split('/').slice(0, 1 + segmentsToKeep).join('/') +
-        '/?p=/' + l.pathname.split('/').slice(1 + segmentsToKeep).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?/' +
+        l.pathname.split('/').slice(1 + segmentCount).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
         l.hash
       );
     </script>
