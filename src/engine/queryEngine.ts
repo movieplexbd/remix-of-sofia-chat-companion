@@ -570,8 +570,9 @@ export function createSofiaEngine(
       const winner = ranked[0];
       const rawScore = Math.min(Math.round(winner.finalScore), 99);
       const methodStr = [...new Set(winner.methods)].slice(0, 3).join('+');
-      let answer = wrapResponse(winner.item.answer, rawScore);
-      answer = applyPersonality(answer, RT.personality, RT);
+      const chosen = pickAnswer(winner.item, RT);
+      let answer = wrapResponse(chosen, rawScore);
+      answer = applyPersonality(answer, RT.personality, RT, D);
       const prefix = SENT_PREFIXES[sentiment] || '';
       updateContext(null, winner.item.category);
       updateMemory(inputText, answer, entities, winner.item.category);
