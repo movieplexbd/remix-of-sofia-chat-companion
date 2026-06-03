@@ -216,18 +216,41 @@ function getTpl(tpl: DataStore['tpl'], type: string, vars: Record<string, string
   return t;
 }
 
-function applyPlaceholders(text: string, RT: RuntimeState): string {
+function applyPlaceholders(text: string, RT: RuntimeState, D?: DataStore): string {
+  if (!text) return text;
   let result = text;
-  if (RT.userName) {
-    result = result.replace(/\[name\]/g, RT.userName);
-  }
-  if (RT.selectedCharacter) {
-    result = result.replace(/\[character\]/g, RT.selectedCharacter);
-  }
+  const name = RT.userName || 'বন্ধু';
+  const age = RT.userAge || '';
+  const gender = RT.userGender === 'male' ? 'ছেলে' : RT.userGender === 'female' ? 'মেয়ে' : (RT.userGender || '');
+  const character = RT.selectedCharacter || '';
+  const bot = D?.cfg?.botName || 'Sofia';
+  result = result
+    .replace(/\[name\]/gi, name)
+    .replace(/\[age\]/gi, age)
+    .replace(/\[gender\]/gi, gender)
+    .replace(/\[character\]/gi, character)
+    .replace(/\[bot\]/gi, bot);
   return result;
 }
 
-function applyPersonality(answer: string, personality: string, RT: RuntimeState): string {
+/** Pick the next answer from an item — rotates through item.answers if present. */
+function pickAnswer(item: QAItem, RT: RuntimeState): string {
+  const pool = (item.answers && item.answers.length > 1) ? item.answers : null;
+  if (!pool) return item.answer;
+  const prefs = (RT.memory.preferences as any) || (RT.memory.preferences = {} as any);
+  const key = `_ansIdx_${item.firebaseKey}`;
+  const lastIdx = typeof prefs[key] === 'number' ? prefs[key] : -1;
+  // round-robin with slight randomness so it never feels mechanical
+  let nextIdx = (lastIdx + 1) % pool.length;
+  if (pool.length > 2 && Math.random() < 0.3) {
+    nextIdx = Math.floor(Math.random() * pool.length);
+    if (nextIdx === lastIdx) nextIdx = (nextIdx + 1) % pool.length;
+  }
+  prefs[key] = nextIdx;
+  return pool[nextIdx];
+}
+
+function applyPersonality(answer: string, personality: string, RT: RuntimeState, D?: DataStore): string {
   const p = PERSONALITIES[personality] || PERSONALITIES.friendly;
   let result = answer;
   if (personality === 'concise') {
@@ -235,7 +258,7 @@ function applyPersonality(answer: string, personality: string, RT: RuntimeState)
     if (lines.length > 4) result = lines.slice(0, 4).join('\n') + '...';
     else if (result.length > 200) result = result.substring(0, 200) + '...';
   }
-  result = applyPlaceholders(result, RT);
+  result = applyPlaceholders(result, RT, D);
   return (p.prefix || '') + result;
 }
 
