@@ -466,6 +466,13 @@ export function createSofiaEngine(
     const timeResult = tryTimeDate(correctedText, feat(D.cfg, 'timeEnabled'));
     if (timeResult) return { answer: timeResult, method: 'DateTime', score: 100 };
 
+    // Personal info — remember + answer about user
+    const personal = tryPersonalInfo(correctedText, RT, D);
+    if (personal) return { answer: personal, method: 'Personal', score: 100 };
+    // Selected character / slide recall
+    const ctxRecall = tryContextRecall(correctedText, RT, D);
+    if (ctxRecall) return { answer: ctxRecall, method: 'Memory', score: 100 };
+
     // Learning states
     if (RT.state === 'asking_teach') {
       const isYes = /^(হ্যাঁ|হ্যা|yes|ha|হা|ok|ঠিক|হ|ji|জি|হ্য|sure)$/i.test(correctedText.trim());
