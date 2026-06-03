@@ -4,7 +4,8 @@ export interface QAItem {
   firebaseKey: string;
   originalQuestions: string[];
   processedQuestions: string[];
-  answer: string;
+  answer: string;            // primary / fallback answer
+  answers?: string[];        // optional pool of alternative answers (smart rotation)
   category: string;
   tags: string[];
   feedback: { positive: number; negative: number };
