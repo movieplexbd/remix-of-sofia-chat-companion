@@ -72,13 +72,23 @@ export function useFirebase() {
         const syn = synS.exists() ? synS.val() || {} : {};
         let qa: QAItem[] = [];
         if (qaS.exists()) {
-          qa = Object.entries(qaS.val()).map(([k, v]: [string, any]) => ({
-            firebaseKey: k,
-            originalQuestions: Array.isArray(v.questions) ? v.questions : [v.question || ''],
-            processedQuestions: (Array.isArray(v.questions) ? v.questions : [v.question || '']).map((q: string) => synonymReplace(q, syn)),
-            answer: v.answer || '', category: v.category || 'general', tags: v.tags || [],
-            feedback: v.feedback || { positive: 0, negative: 0 },
-          })).filter(i => i.answer);
+          qa = Object.entries(qaS.val()).map(([k, v]: [string, any]) => {
+            const qs = Array.isArray(v.questions) ? v.questions : [v.question || ''];
+            const answersArr: string[] | undefined = Array.isArray(v.answers) && v.answers.length
+              ? v.answers.filter((a: any) => typeof a === 'string' && a.trim())
+              : undefined;
+            const primary = (answersArr && answersArr[0]) || v.answer || '';
+            return {
+              firebaseKey: k,
+              originalQuestions: qs,
+              processedQuestions: qs.map((q: string) => synonymReplace(q, syn)),
+              answer: primary,
+              answers: answersArr,
+              category: v.category || 'general',
+              tags: v.tags || [],
+              feedback: v.feedback || { positive: 0, negative: 0 },
+            } as QAItem;
+          }).filter(i => i.answer);
         }
 
         updateStep(3, 50);
