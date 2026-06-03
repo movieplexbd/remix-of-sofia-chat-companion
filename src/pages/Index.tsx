@@ -27,6 +27,7 @@ export default function SofiaChat() {
   const [matchBadge, setMatchBadge] = useState<string | null>(null);
   const [extraMessages, setExtraMessages] = useState<Map<string, Message>>(new Map());
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
   const welcomeSent = useRef(false);
 
   useEffect(() => {
@@ -146,9 +147,15 @@ export default function SofiaChat() {
     sofia.runtime.userAge = userData.age;
     sofia.runtime.userGender = userData.gender;
     toast(`👋 স্বাগতম, ${userData.name}!`);
-    // Force re-render if needed, though runtime is a ref, 
-    // we might need a state update to trigger UI refresh for the onboarding overlay
-    setLang(l => l); 
+    // Trigger re-render by setting onboarding complete state
+    setOnboardingComplete(true);
+  }, [sofia]);
+
+  // Reset onboarding when chat is cleared
+  useEffect(() => {
+    if (!sofia.runtime.userName) {
+      setOnboardingComplete(false);
+    }
   }, [sofia]);
 
   const handleCharacterSelect = useCallback((char: SofiaCharacter) => {
@@ -195,7 +202,7 @@ export default function SofiaChat() {
       <Toaster position="bottom-center" />
       <BootScreen steps={bootSteps} progress={bootProgress} visible={loading} />
 
-      {!loading && !sofia.runtime.userName && (
+      {!loading && !onboardingComplete && !sofia.runtime.userName && (
         <Onboarding onComplete={handleOnboardingComplete} />
       )}
 
