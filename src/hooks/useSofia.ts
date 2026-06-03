@@ -83,50 +83,68 @@ export function useSofia(data: DataStore | null, db: Database | null) {
     setPersonalityState(p);
   }, []);
 
-  const sendMessage = useCallback(async (text: string) => {
-    if (!text.trim() || !engine) return;
-    const rt = rtRef.current;
+  /** Detect if a single user input contains multiple questions. */
+  const splitQuestions = useCallback((text: string): string[] => {
+    const trimmed = text.trim();
+    if (trimmed.length < 8) return [trimmed];
+    // Split on ? । and the Bangla full stop, keep non-empty segments
+    const parts = trimmed
+      .split(/(?<=[?？।])\s+|(?<=\?)(?=\S)/u)
+      .map(s => s.trim())
+      .filter(Boolean);
+    if (parts.length <= 1) return [trimmed];
+    // Only treat as multi-question if at least 2 parts look like questions
+    const qLike = parts.filter(p => /[?？।]$/.test(p) || /^(কি|কী|কোথায়|কেন|কীভাবে|কিভাবে|কখন|কে|কার|কোন|what|where|why|how|when|who)/i.test(p));
+    return qLike.length >= 2 ? parts : [trimmed];
+  }, []);
 
-    // Add user message
-    const userMsg: Message = {
-      id: makeId(), sender: 'user', text, timestamp: new Date(),
-      threadId: rt.lastUserQ ? `thread_${Date.now()}` : undefined,
-    };
-    setMessages(prev => [...prev, userMsg]);
+  const _processOne = useCallback(async (text: string, threadId: string | undefined, addUser: boolean) => {
+    if (!engine) return null;
+    if (addUser) {
+      const userMsg: Message = { id: makeId(), sender: 'user', text, timestamp: new Date(), threadId };
+      setMessages(prev => [...prev, userMsg]);
+    }
     setIsTyping(true);
-
-    // Simulate typing delay
-    await new Promise(r => setTimeout(r, 350 + Math.random() * 350));
-
+    await new Promise(r => setTimeout(r, 300 + Math.random() * 300));
     const reply = await engine.getReply(text);
     const { main, extra } = data?.cfg.features?.answerChunking !== false
       ? chunkAnswer(reply.answer)
       : { main: reply.answer, extra: null };
-
     const botMsg: Message = {
       id: makeId(), sender: 'bot', text: main, timestamp: new Date(),
       firebaseKey: reply.firebaseKey, method: reply.method,
       score: reply.score, sentiment: reply.sentiment,
       related: reply.related, spellCorrected: reply.spellCorrected,
       originalText: reply.originalText, isMath: reply.isMath,
-      quickReplies: reply.quickReplies,
-      threadId: userMsg.threadId,
+      quickReplies: reply.quickReplies, threadId,
     };
-
     setMessages(prev => [...prev, botMsg]);
     setIsTyping(false);
-
-    // Handle extra chunk
     if (extra) {
-      const extraMsg: Message = {
-        id: makeId(), sender: 'bot', text: extra, timestamp: new Date(),
-        threadId: userMsg.threadId,
-      };
-      // We'll return extra so the UI can show "Read more" button
-      return { extraMessage: extraMsg };
+      return { extraMessage: { id: makeId(), sender: 'bot' as const, text: extra, timestamp: new Date(), threadId } };
     }
     return null;
   }, [engine, data]);
+
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || !engine) return;
+    const rt = rtRef.current;
+    const threadId = rt.lastUserQ ? `thread_${Date.now()}` : undefined;
+
+    const parts = splitQuestions(text);
+    if (parts.length === 1) {
+      return await _processOne(parts[0], threadId, true);
+    }
+    // Multi-question: show the original user message once, then reply per part.
+    const userMsg: Message = { id: makeId(), sender: 'user', text, timestamp: new Date(), threadId };
+    setMessages(prev => [...prev, userMsg]);
+    let lastExtra: any = null;
+    for (const part of parts) {
+      const r = await _processOne(part, threadId, false);
+      if (r?.extraMessage) lastExtra = r;
+    }
+    return lastExtra;
+  }, [engine, splitQuestions, _processOne]);
 
   const addExtraMessage = useCallback((msg: Message) => {
     setMessages(prev => [...prev, msg]);
