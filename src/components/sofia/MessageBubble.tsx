@@ -22,6 +22,13 @@ interface MessageBubbleProps {
 
 const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢'];
 
+/** Wrap bare media URLs in markdown links so our `a` override can render them as <img>/<video>/<audio>. */
+function linkifyMedia(text: string): string {
+  if (!text) return text;
+  const re = /(?<!\]\()\bhttps?:\/\/[^\s<>")\]]+\.(?:png|jpe?g|gif|webp|avif|svg|mp4|webm|mov|mp3|wav|ogg|m4a)(?:\?[^\s<>")\]]*)?/gi;
+  return text.replace(re, (url) => `[media](${url})`);
+}
+
 export default function MessageBubble({
   message, onSendMessage, onFeedback, onReaction,
   onRetry, lowConfThreshold, highConfThreshold, lang,
@@ -83,7 +90,35 @@ export default function MessageBubble({
         >
           {isBot ? (
             <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-headings:text-primary prose-headings:my-2 prose-strong:text-primary prose-code:bg-primary/10 prose-code:text-primary prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[0.85em]">
-              <ReactMarkdown rehypePlugins={[rehypeRaw]}>{message.text}</ReactMarkdown>
+              <ReactMarkdown
+                rehypePlugins={[rehypeRaw]}
+                components={{
+                  img: ({ src, alt }) => (
+                    <img
+                      src={src as string}
+                      alt={alt || ''}
+                      className="rounded-lg max-h-72 my-1 cursor-zoom-in"
+                      loading="lazy"
+                      onClick={() => window.open(src as string, '_blank')}
+                    />
+                  ),
+                  a: ({ href, children }) => {
+                    const url = String(href || '');
+                    if (/\.(mp4|webm|mov)(\?|$)/i.test(url)) {
+                      return <video src={url} controls className="rounded-lg max-h-72 my-1 w-full" />;
+                    }
+                    if (/\.(mp3|wav|ogg|m4a)(\?|$)/i.test(url)) {
+                      return <audio src={url} controls className="w-full my-1" />;
+                    }
+                    if (/\.(png|jpe?g|gif|webp|avif|svg)(\?|$)/i.test(url)) {
+                      return <img src={url} alt="" className="rounded-lg max-h-72 my-1 cursor-zoom-in" loading="lazy" onClick={() => window.open(url, '_blank')} />;
+                    }
+                    return <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary underline">{children}</a>;
+                  },
+                }}
+              >
+                {linkifyMedia(message.text)}
+              </ReactMarkdown>
             </div>
           ) : (
             <p className="my-0">{message.text}</p>

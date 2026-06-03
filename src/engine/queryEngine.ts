@@ -216,18 +216,41 @@ function getTpl(tpl: DataStore['tpl'], type: string, vars: Record<string, string
   return t;
 }
 
-function applyPlaceholders(text: string, RT: RuntimeState): string {
+function applyPlaceholders(text: string, RT: RuntimeState, D?: DataStore): string {
+  if (!text) return text;
   let result = text;
-  if (RT.userName) {
-    result = result.replace(/\[name\]/g, RT.userName);
-  }
-  if (RT.selectedCharacter) {
-    result = result.replace(/\[character\]/g, RT.selectedCharacter);
-  }
+  const name = RT.userName || 'বন্ধু';
+  const age = RT.userAge || '';
+  const gender = RT.userGender === 'male' ? 'ছেলে' : RT.userGender === 'female' ? 'মেয়ে' : (RT.userGender || '');
+  const character = RT.selectedCharacter || '';
+  const bot = D?.cfg?.botName || 'Sofia';
+  result = result
+    .replace(/\[name\]/gi, name)
+    .replace(/\[age\]/gi, age)
+    .replace(/\[gender\]/gi, gender)
+    .replace(/\[character\]/gi, character)
+    .replace(/\[bot\]/gi, bot);
   return result;
 }
 
-function applyPersonality(answer: string, personality: string, RT: RuntimeState): string {
+/** Pick the next answer from an item — rotates through item.answers if present. */
+function pickAnswer(item: QAItem, RT: RuntimeState): string {
+  const pool = (item.answers && item.answers.length > 1) ? item.answers : null;
+  if (!pool) return item.answer;
+  const prefs = (RT.memory.preferences as any) || (RT.memory.preferences = {} as any);
+  const key = `_ansIdx_${item.firebaseKey}`;
+  const lastIdx = typeof prefs[key] === 'number' ? prefs[key] : -1;
+  // round-robin with slight randomness so it never feels mechanical
+  let nextIdx = (lastIdx + 1) % pool.length;
+  if (pool.length > 2 && Math.random() < 0.3) {
+    nextIdx = Math.floor(Math.random() * pool.length);
+    if (nextIdx === lastIdx) nextIdx = (nextIdx + 1) % pool.length;
+  }
+  prefs[key] = nextIdx;
+  return pool[nextIdx];
+}
+
+function applyPersonality(answer: string, personality: string, RT: RuntimeState, D?: DataStore): string {
   const p = PERSONALITIES[personality] || PERSONALITIES.friendly;
   let result = answer;
   if (personality === 'concise') {
@@ -235,8 +258,69 @@ function applyPersonality(answer: string, personality: string, RT: RuntimeState)
     if (lines.length > 4) result = lines.slice(0, 4).join('\n') + '...';
     else if (result.length > 200) result = result.substring(0, 200) + '...';
   }
-  result = applyPlaceholders(result, RT);
+  result = applyPlaceholders(result, RT, D);
   return (p.prefix || '') + result;
+}
+
+/**
+ * Personal info recall — answers about user's own name/age/gender,
+ * and also captures new info from sentences like "আমার নাম রাহাত".
+ */
+function tryPersonalInfo(text: string, RT: RuntimeState, D: DataStore): string | null {
+  const t = text.toLowerCase().trim();
+  // Capture name: "আমার নাম X" / "amar nam X" / "my name is X"
+  const setName =
+    text.match(/আমার\s*নাম\s+(\S+)/) ||
+    text.match(/amar\s+nam\s+(\S+)/i) ||
+    text.match(/my\s+name\s+is\s+(\S+)/i);
+  if (setName) {
+    RT.userName = setName[1].replace(/[।.,!?]/g, '');
+    return `সুন্দর নাম তো! আমি মনে রাখলাম **${RT.userName}** 💖`;
+  }
+  // Capture age
+  const setAge =
+    text.match(/আমার\s*বয়স\s+(\d+|[০-৯]+)/) ||
+    text.match(/(?:my|amar)\s+age\s+(?:is\s+)?(\d+)/i);
+  if (setAge) {
+    RT.userAge = setAge[1];
+    return `ঠিক আছে, তোমার বয়স **${RT.userAge}** — মনে রাখলাম 😊`;
+  }
+
+  const askName = /(আমার\s*নাম\s*ক?ি|amar\s*nam\s*ki|what.*my\s*name|আমি\s*কে)/i.test(text);
+  if (askName) {
+    return RT.userName
+      ? `তোমার নাম **${RT.userName}** 💖 ভুলবো না!`
+      : 'এখনো তো নাম বলোনি! 😊 বলো — *"আমার নাম ___"*';
+  }
+  const askAge = /(আমার\s*বয়স|amar\s*boyos|my\s*age|how\s*old\s*am\s*i)/i.test(text);
+  if (askAge) {
+    return RT.userAge
+      ? `তোমার বয়স **${RT.userAge}** বছর 🎂`
+      : 'তোমার বয়স তো বলোনি! বলো — *"আমার বয়স ___"*';
+  }
+  const askGender = /(আমি\s*ছেলে|আমি\s*মেয়ে|আমার\s*লিঙ্গ|my\s*gender)/i.test(text);
+  if (askGender) {
+    if (!RT.userGender) return 'তোমার লিঙ্গ এখনো জানি না 🙈';
+    const g = RT.userGender === 'male' ? 'ছেলে 👦' : RT.userGender === 'female' ? 'মেয়ে 👧' : RT.userGender;
+    return `তুমি একজন **${g}**`;
+  }
+  return null;
+}
+
+/** Recall about chosen character / selected image slide. */
+function tryContextRecall(text: string, RT: RuntimeState, D: DataStore): string | null {
+  const askChar = /(তুমি\s*কে|তোমার\s*রোল|character|তোমার\s*ভূমিকা|who\s*are\s*you\s*to\s*me)/i.test(text);
+  if (askChar && RT.selectedCharacter) {
+    return `আমি এখন তোমার **${RT.selectedCharacter}** 💕`;
+  }
+  const askPick = /(কোনটা\s*সিলেক্ট|আমি\s*কোনটা\s*বেছে|which.*selected|আমার\s*চয়েস)/i.test(text);
+  if (askPick) {
+    const slideId = RT.selectedSlideId;
+    if (!slideId) return null;
+    const slide = (D as any).slides?.find((s: any) => s.id === slideId);
+    if (slide) return `তুমি বেছেছিলে **${slide.heading}** 🖼️${slide.memoryData ? `\n\n${slide.memoryData}` : ''}`;
+  }
+  return null;
 }
 
 function getContextualInput(text: string, history: RuntimeState['history'], enabled: boolean): string {
@@ -443,6 +527,13 @@ export function createSofiaEngine(
     const timeResult = tryTimeDate(correctedText, feat(D.cfg, 'timeEnabled'));
     if (timeResult) return { answer: timeResult, method: 'DateTime', score: 100 };
 
+    // Personal info — remember + answer about user
+    const personal = tryPersonalInfo(correctedText, RT, D);
+    if (personal) return { answer: personal, method: 'Personal', score: 100 };
+    // Selected character / slide recall
+    const ctxRecall = tryContextRecall(correctedText, RT, D);
+    if (ctxRecall) return { answer: ctxRecall, method: 'Memory', score: 100 };
+
     // Learning states
     if (RT.state === 'asking_teach') {
       const isYes = /^(হ্যাঁ|হ্যা|yes|ha|হা|ok|ঠিক|হ|ji|জি|হ্য|sure)$/i.test(correctedText.trim());
@@ -490,7 +581,7 @@ export function createSofiaEngine(
         RT.history.push({ q: inputText, a: resp, category: 'intent', time: Date.now() });
         await logAnalytics(inputText, 'Intent', 100);
         return {
-          answer: (SENT_PREFIXES[sentiment] || '') + applyPersonality(resp, RT.personality),
+          answer: (SENT_PREFIXES[sentiment] || '') + applyPersonality(resp, RT.personality, RT),
           method: 'Intent', score: 100, sentiment,
         };
       }
@@ -540,8 +631,9 @@ export function createSofiaEngine(
       const winner = ranked[0];
       const rawScore = Math.min(Math.round(winner.finalScore), 99);
       const methodStr = [...new Set(winner.methods)].slice(0, 3).join('+');
-      let answer = wrapResponse(winner.item.answer, rawScore);
-      answer = applyPersonality(answer, RT.personality, RT);
+      const chosen = pickAnswer(winner.item, RT);
+      let answer = wrapResponse(chosen, rawScore);
+      answer = applyPersonality(answer, RT.personality, RT, D);
       const prefix = SENT_PREFIXES[sentiment] || '';
       updateContext(null, winner.item.category);
       updateMemory(inputText, answer, entities, winner.item.category);

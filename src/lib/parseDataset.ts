@@ -37,14 +37,19 @@ function normalizeItem(raw: any): QARecord | null {
     raw.questions ?? raw.question ?? raw.q ?? raw.query ?? raw.prompt ?? raw.input ?? raw.user
   ).map((s: any) => stripHtml(String(s))).filter(Boolean);
 
-  const answer = stripHtml(String(
+  // Support multiple answers
+  const answersArr: string[] = asArray(raw.answers ?? raw.responses ?? raw.replies)
+    .map((s: any) => stripHtml(String(s))).filter(Boolean);
+  const singleAns = stripHtml(String(
     raw.answer ?? raw.a ?? raw.response ?? raw.reply ?? raw.output ?? raw.assistant ?? raw.bot ?? ''
   ));
+  const primary = answersArr[0] || singleAns;
 
-  if (!questions.length || !answer) return null;
+  if (!questions.length || !primary) return null;
   return {
     questions,
-    answer,
+    answer: primary,
+    ...(answersArr.length > 1 ? { answers: answersArr } : {}),
     category: raw.category || raw.cat || raw.topic || 'general',
     tags: Array.isArray(raw.tags) ? raw.tags
       : (raw.tags ? String(raw.tags).split(/[,;|]/).map((s: string) => s.trim()).filter(Boolean) : []),

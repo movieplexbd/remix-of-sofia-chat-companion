@@ -15,6 +15,37 @@ export interface DatasetExample {
 
 export const DATASET_EXAMPLES: DatasetExample[] = [
   {
+    id: 'json-advanced',
+    title: '⭐ JSON — Multi-answer + Placeholders + Media (best)',
+    format: 'JSON',
+    ext: '.json',
+    desc: 'একটা question-এ একাধিক answer, [name]/[character]/[age] placeholder, এবং image/video/audio link সহ সবচেয়ে powerful format।',
+    content: `[
+  {
+    "questions": ["Tumi kemon acho?", "তুমি কেমন আছো?"],
+    "answers": [
+      "ভালো আছি [name]! তুমি কেমন আছো?",
+      "তোমার সাথে কথা বলে তো দারুণ লাগছে [name] 💖",
+      "এখন তো **[character]** হয়ে তোমার পাশে আছি — দারুণ আছি!"
+    ],
+    "category": "greeting",
+    "tags": ["multi-answer"]
+  },
+  {
+    "questions": ["Tomar chobi dekhao", "তোমার ছবি দেখাও"],
+    "answer": "এই দেখো [name] 💕\\n\\nhttps://i.ibb.co/pBt8bS5c/1748861266024.jpg",
+    "category": "media",
+    "tags": ["image"]
+  },
+  {
+    "questions": ["Gan shonao", "গান শোনাও"],
+    "answer": "তোমার জন্য একটা গান 🎵\\n\\nhttps://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+    "category": "media",
+    "tags": ["audio"]
+  }
+]`,
+  },
+  {
     id: 'json-array',
     title: 'JSON Array (recommended)',
     format: 'JSON',
