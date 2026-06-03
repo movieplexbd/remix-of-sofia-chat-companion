@@ -262,6 +262,67 @@ function applyPersonality(answer: string, personality: string, RT: RuntimeState,
   return (p.prefix || '') + result;
 }
 
+/**
+ * Personal info recall — answers about user's own name/age/gender,
+ * and also captures new info from sentences like "আমার নাম রাহাত".
+ */
+function tryPersonalInfo(text: string, RT: RuntimeState, D: DataStore): string | null {
+  const t = text.toLowerCase().trim();
+  // Capture name: "আমার নাম X" / "amar nam X" / "my name is X"
+  const setName =
+    text.match(/আমার\s*নাম\s+(\S+)/) ||
+    text.match(/amar\s+nam\s+(\S+)/i) ||
+    text.match(/my\s+name\s+is\s+(\S+)/i);
+  if (setName) {
+    RT.userName = setName[1].replace(/[।.,!?]/g, '');
+    return `সুন্দর নাম তো! আমি মনে রাখলাম **${RT.userName}** 💖`;
+  }
+  // Capture age
+  const setAge =
+    text.match(/আমার\s*বয়স\s+(\d+|[০-৯]+)/) ||
+    text.match(/(?:my|amar)\s+age\s+(?:is\s+)?(\d+)/i);
+  if (setAge) {
+    RT.userAge = setAge[1];
+    return `ঠিক আছে, তোমার বয়স **${RT.userAge}** — মনে রাখলাম 😊`;
+  }
+
+  const askName = /(আমার\s*নাম\s*ক?ি|amar\s*nam\s*ki|what.*my\s*name|আমি\s*কে)/i.test(text);
+  if (askName) {
+    return RT.userName
+      ? `তোমার নাম **${RT.userName}** 💖 ভুলবো না!`
+      : 'এখনো তো নাম বলোনি! 😊 বলো — *"আমার নাম ___"*';
+  }
+  const askAge = /(আমার\s*বয়স|amar\s*boyos|my\s*age|how\s*old\s*am\s*i)/i.test(text);
+  if (askAge) {
+    return RT.userAge
+      ? `তোমার বয়স **${RT.userAge}** বছর 🎂`
+      : 'তোমার বয়স তো বলোনি! বলো — *"আমার বয়স ___"*';
+  }
+  const askGender = /(আমি\s*ছেলে|আমি\s*মেয়ে|আমার\s*লিঙ্গ|my\s*gender)/i.test(text);
+  if (askGender) {
+    if (!RT.userGender) return 'তোমার লিঙ্গ এখনো জানি না 🙈';
+    const g = RT.userGender === 'male' ? 'ছেলে 👦' : RT.userGender === 'female' ? 'মেয়ে 👧' : RT.userGender;
+    return `তুমি একজন **${g}**`;
+  }
+  return null;
+}
+
+/** Recall about chosen character / selected image slide. */
+function tryContextRecall(text: string, RT: RuntimeState, D: DataStore): string | null {
+  const askChar = /(তুমি\s*কে|তোমার\s*রোল|character|তোমার\s*ভূমিকা|who\s*are\s*you\s*to\s*me)/i.test(text);
+  if (askChar && RT.selectedCharacter) {
+    return `আমি এখন তোমার **${RT.selectedCharacter}** 💕`;
+  }
+  const askPick = /(কোনটা\s*সিলেক্ট|আমি\s*কোনটা\s*বেছে|which.*selected|আমার\s*চয়েস)/i.test(text);
+  if (askPick) {
+    const slideId = RT.selectedSlideId;
+    if (!slideId) return null;
+    const slide = (D as any).slides?.find((s: any) => s.id === slideId);
+    if (slide) return `তুমি বেছেছিলে **${slide.heading}** 🖼️${slide.memoryData ? `\n\n${slide.memoryData}` : ''}`;
+  }
+  return null;
+}
+
 function getContextualInput(text: string, history: RuntimeState['history'], enabled: boolean): string {
   if (!enabled || !history.length) return text;
   const lower = text.toLowerCase().trim();
