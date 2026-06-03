@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: "/sofi-react-companion/",
+  base: "/remix-of-sofia-chat-companion/",
   server: {
     host: "::",
     port: 8080,
