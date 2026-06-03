@@ -22,6 +22,13 @@ interface MessageBubbleProps {
 
 const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢'];
 
+/** Wrap bare media URLs in markdown links so our `a` override can render them as <img>/<video>/<audio>. */
+function linkifyMedia(text: string): string {
+  if (!text) return text;
+  const re = /(?<!\]\()\bhttps?:\/\/[^\s<>")\]]+\.(?:png|jpe?g|gif|webp|avif|svg|mp4|webm|mov|mp3|wav|ogg|m4a)(?:\?[^\s<>")\]]*)?/gi;
+  return text.replace(re, (url) => `[media](${url})`);
+}
+
 export default function MessageBubble({
   message, onSendMessage, onFeedback, onReaction,
   onRetry, lowConfThreshold, highConfThreshold, lang,
