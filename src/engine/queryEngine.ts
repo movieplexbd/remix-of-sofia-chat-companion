@@ -490,7 +490,7 @@ export function createSofiaEngine(
         RT.history.push({ q: inputText, a: resp, category: 'intent', time: Date.now() });
         await logAnalytics(inputText, 'Intent', 100);
         return {
-          answer: (SENT_PREFIXES[sentiment] || '') + applyPersonality(resp, RT.personality),
+          answer: (SENT_PREFIXES[sentiment] || '') + applyPersonality(resp, RT.personality, RT),
           method: 'Intent', score: 100, sentiment,
         };
       }
