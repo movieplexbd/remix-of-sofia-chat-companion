@@ -110,7 +110,7 @@ export default function MessageBubble({
                   },
                 }}
               >
-                {message.text}
+                {linkifyMedia(message.text)}
               </ReactMarkdown>
             </div>
           ) : (
