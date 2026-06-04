@@ -81,7 +81,20 @@ export interface IntelligenceAPI {
   clearCaches: () => void;
 
   // Diagnostics
-  getDiagnostics: () => Record<string, unknown>;
+  getDiagnostics: () => {
+    weights: ReturnType<typeof getAllWeights>;
+    memory: ReturnType<ContextMemory['snapshot']> & { usage: number };
+    feedback: { topQueries: ReturnType<typeof topQueries>; topClicked: ReturnType<typeof topClicked>; full: ReturnType<typeof snapshot> };
+    cache: { result: ReturnType<LRUCache<string, unknown>['stats']>; query: ReturnType<LRUCache<string, unknown>['stats']> };
+    graphSize: number;
+    graph: ReturnType<KnowledgeGraph['serialize']>;
+    suggestions: ReturnType<typeof getSuggestionStats>;
+    rules: ReturnType<ReasoningEngine['getRules']>;
+    concepts: ReturnType<ConceptEngine['list']>;
+    ontology: ReturnType<Ontology['list']>;
+    facts: ReturnType<ContradictionStore['list']>;
+    conflicts: ReturnType<ContradictionStore['conflicts']>;
+  };
   resetLearning: () => void;
 
   // Sub-systems (direct access for admin tools)
