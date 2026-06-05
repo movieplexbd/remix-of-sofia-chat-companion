@@ -11,6 +11,8 @@ export interface OntologyNode {
   id: string;
   parentId: string | null;
   type?: 'category' | 'class' | 'instance';
+  properties?: Record<string, any>;
+  validations?: string[];
 }
 
 const DEFAULTS: OntologyNode[] = [

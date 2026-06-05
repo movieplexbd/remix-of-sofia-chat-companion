@@ -9,22 +9,27 @@ const STORAGE_KEY = 'sofia_concepts_v1';
 
 export interface Concept {
   id: string;
+  name: string;
+  definition?: string;
+  examples?: string[];
   aliases: string[];
   related: string[];           // related concept ids
   categories?: string[];
+  learningScore: number;       // 0..1
+  importanceScore: number;     // 0..1
 }
 
 const DEFAULT_CONCEPTS: Concept[] = [
-  { id: 'MOBILE_DEVICE', aliases: ['phone','mobile','smartphone','cellphone','ফোন','মোবাইল','সেলফোন','স্মার্টফোন'], related: ['COMPUTER','COMMUNICATION'], categories: ['tech'] },
-  { id: 'COMPUTER',      aliases: ['laptop','computer','notebook','pc','ল্যাপটপ','কম্পিউটার'], related: ['MOBILE_DEVICE'], categories: ['tech'] },
-  { id: 'VEHICLE',       aliases: ['car','automobile','vehicle','গাড়ি','গাড়ী','অটোমোবাইল'], related: ['TRANSPORT'], categories: ['transport'] },
-  { id: 'TRANSPORT',     aliases: ['bus','train','বাস','ট্রেন','যানবাহন'], related: ['VEHICLE'] },
-  { id: 'FOOD',          aliases: ['food','meal','খাবার','রান্না','recipe','dish'], related: ['RICE'], categories: ['food'] },
-  { id: 'RICE',          aliases: ['rice','ভাত','চাল'], related: ['FOOD'], categories: ['food'] },
-  { id: 'EDUCATION',     aliases: ['school','college','university','study','স্কুল','কলেজ','বিদ্যালয়','পড়া','শেখা'], related: ['BOOK'], categories: ['education'] },
-  { id: 'BOOK',          aliases: ['book','বই','পাঠ্য'], related: ['EDUCATION'], categories: ['education'] },
-  { id: 'GREETING',      aliases: ['hi','hello','hey','salam','সালাম','হাই','হ্যালো','নমস্কার','আদাব'], related: [] },
-  { id: 'LOCATION_BD',   aliases: ['dhaka','ঢাকা','chittagong','চট্টগ্রাম','বাংলাদেশ','bangladesh'], related: [], categories: ['location'] },
+  { id: 'MOBILE_DEVICE', name: 'Mobile Device', aliases: ['phone','mobile','smartphone','cellphone','ফোন','মোবাইল','সেলফোন','স্মার্টফোন'], related: ['COMPUTER','COMMUNICATION'], categories: ['tech'], learningScore: 0.8, importanceScore: 0.9 },
+  { id: 'COMPUTER',      name: 'Computer', aliases: ['laptop','computer','notebook','pc','ল্যাপটপ','কম্পিউটার'], related: ['MOBILE_DEVICE'], categories: ['tech'], learningScore: 0.8, importanceScore: 0.9 },
+  { id: 'VEHICLE',       name: 'Vehicle', aliases: ['car','automobile','vehicle','গাড়ি','গাড়ী','অটোমোবাইল'], related: ['TRANSPORT'], categories: ['transport'], learningScore: 0.7, importanceScore: 0.8 },
+  { id: 'TRANSPORT',     name: 'Transport', aliases: ['bus','train','বাস','ট্রেন','যানবাহন'], related: ['VEHICLE'], learningScore: 0.6, importanceScore: 0.7 },
+  { id: 'FOOD',          name: 'Food', aliases: ['food','meal','খাবার','রান্না','recipe','dish'], related: ['RICE'], categories: ['food'], learningScore: 0.9, importanceScore: 0.6 },
+  { id: 'RICE',          name: 'Rice', aliases: ['rice','ভাত','চাল'], related: ['FOOD'], categories: ['food'], learningScore: 0.9, importanceScore: 0.5 },
+  { id: 'EDUCATION',     name: 'Education', aliases: ['school','college','university','study','স্কুল','কলেজ','বিদ্যালয়','পড়া','শেখা'], related: ['BOOK'], categories: ['education'], learningScore: 0.8, importanceScore: 0.9 },
+  { id: 'BOOK',          name: 'Book', aliases: ['book','বই','পাঠ্য'], related: ['EDUCATION'], categories: ['education'], learningScore: 0.8, importanceScore: 0.7 },
+  { id: 'GREETING',      name: 'Greeting', aliases: ['hi','hello','hey','salam','সালাম','হাই','হ্যালো','নমস্কার','আদাব'], related: [], learningScore: 1.0, importanceScore: 0.4 },
+  { id: 'LOCATION_BD',   name: 'Bangladesh Locations', aliases: ['dhaka','ঢাকা','chittagong','চট্টগ্রাম','বাংলাদেশ','bangladesh'], related: [], categories: ['location'], learningScore: 0.9, importanceScore: 0.8 },
 ];
 
 export class ConceptEngine {

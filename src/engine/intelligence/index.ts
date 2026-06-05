@@ -37,6 +37,8 @@ import { MultiHopReasoner }             from './multiHopReasoner';
 import { detectTopics, topicBoost, type TopicHit } from './topicDetector';
 import { ContradictionStore }           from './contradictionDetector';
 import { aggregate, type AggregatedEvidence } from './evidenceAggregator';
+import { RetrievalOrchestrator } from './retrievalOrchestrator';
+import { WorldModelEngine } from './worldModelEngine';
 
 // v6.5 additions — Autonomous Mind
 import { InferenceEngine }              from './inferenceEngine';
@@ -124,6 +126,8 @@ export interface IntelligenceAPI {
   curiosity: CuriosityEngine;
   active: ActiveLearningEngine;
   meta: MetaCognition;
+  orchestrator: RetrievalOrchestrator;
+  worldModel: WorldModelEngine;
 }
 
 export function createIntelligence(userSyn: Record<string, string[]> = {}): IntelligenceAPI {
@@ -138,6 +142,8 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
   const curiosity = new CuriosityEngine();
   const active    = new ActiveLearningEngine();
   const meta      = new MetaCognition();
+  const orchestrator = new RetrievalOrchestrator();
+  const worldModel = new WorldModelEngine();
   const resultCache = new LRUCache<string, RankedResult[]>(80, 'results');
   const queryCache  = new LRUCache<string, UnderstoodQuery>(120, 'queries');
 
@@ -324,7 +330,7 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
 
     graph, memory, reasoning: reasoner,
     concepts, ontology, multiHop, facts,
-    inference, curiosity, active, meta,
+    inference, curiosity, active, meta, orchestrator, worldModel,
   };
 }
 
