@@ -406,6 +406,7 @@ export function createSofiaEngine(
   let tfidfM = buildTFIDF(D.qa);
   let coMatrix = buildCoOccurrence(D.qa);
   const intel = createIntelligence(D.syn);
+  let _lastMindTrace: import('./intelligence/autonomousMind').MindTrace | null = null;
 
   function rebuildModels() {
     bm25M = buildBM25(D.qa);
