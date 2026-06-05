@@ -86,8 +86,15 @@ export default function SofiaChat() {
     handleFeedback(key, isPositive, userQ);
     const botMsg = sofia.messages.find(m => m.firebaseKey === key);
     const engines = botMsg?.method ? botMsg.method.split('+') : [];
+    const category = (botMsg as any)?.category;
     if (isPositive) sofia.intel?.recordClick(userQ || '', key, engines);
     else sofia.intel?.recordIgnore(userQ || '', key, engines);
+    // Phase E — Feedback loop into meta-cognition + curiosity + active learning
+    if (category) sofia.intel?.recordOutcome(category, isPositive ? 1 : 0);
+    if (!isPositive && userQ) {
+      const topic = (userQ.trim().split(/\s+/)[0] || '').slice(0, 24);
+      if (topic) sofia.intel?.curiosity.requestLearning(topic, 'bn');
+    }
     toast(isPositive ? '👍 ধন্যবাদ!' : '👎 Feedback দেওয়ার জন্য ধন্যবাদ!');
   }, [handleFeedback, sofia]);
 

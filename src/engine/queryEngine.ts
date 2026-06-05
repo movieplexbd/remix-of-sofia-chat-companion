@@ -383,6 +383,7 @@ export interface ReplyResult {
   spellCorrected?: boolean;
   originalText?: string | null;
   isMath?: boolean;
+  mindTrace?: import('./intelligence/autonomousMind').MindTrace | null;
 }
 
 export interface SofiaEngine {
@@ -392,6 +393,8 @@ export interface SofiaEngine {
   coMatrix: CoMatrix;
   rebuildModels: () => void;
   intel: ReturnType<typeof createIntelligence>;
+  lastMindTrace: () => import('./intelligence/autonomousMind').MindTrace | null;
+  recordFeedback: (firebaseKey: string, isPositive: boolean, category?: string) => void;
 }
 
 export function createSofiaEngine(
@@ -403,6 +406,7 @@ export function createSofiaEngine(
   let tfidfM = buildTFIDF(D.qa);
   let coMatrix = buildCoOccurrence(D.qa);
   const intel = createIntelligence(D.syn);
+  let _lastMindTrace: import('./intelligence/autonomousMind').MindTrace | null = null;
 
   function rebuildModels() {
     bm25M = buildBM25(D.qa);
@@ -639,15 +643,24 @@ export function createSofiaEngine(
       updateMemory(inputText, answer, entities, winner.item.category);
       RT.lastAnswer = winner.item.answer; RT.lastUserQ = inputText;
       RT.history.push({ q: inputText, a: winner.item.answer, category: winner.item.category, time: Date.now() });
-      if (RT.history.length > 30) RT.history.shift(); // increased history from 20 to 30
+      if (RT.history.length > 30) RT.history.shift();
 
       await logAnalytics(inputText, methodStr, rawScore);
 
-      // Phase 6+7: record interaction for adaptive learning + topic memory
       intel.recordShown(inputText, winner.item.firebaseKey ?? null);
       intel.recordTurn(inputText, winner.item.answer, winner.item.category, uq.normalized.tokens);
 
-      // Smart follow-ups: combine related questions + context-aware suggestions
+      // Phase A — Autonomous Mind pipeline
+      _lastMindTrace = intel.think({
+        query: inputText,
+        tokens: uq.normalized.tokens,
+        topScore: winner.finalScore / 100,
+        secondScore: (ranked[1]?.finalScore || 0) / 100,
+        candidateCount: ranked.length,
+        answer: chosen,
+        category: winner.item.category,
+      });
+
       const related = feat(D.cfg, 'relatedQuestions') ? findRelated(winner.item, D.qa) : [];
       const followUps = generateFollowUps(winner.item, RT.history, D.qa);
       const smartSuggestions = [...new Set([...followUps, ...related])].slice(0, 4);
@@ -658,6 +671,7 @@ export function createSofiaEngine(
         related: smartSuggestions.length ? smartSuggestions : null,
         quickReplies: followUps.length ? followUps.slice(0, 2) : null,
         spellCorrected: spellResult.corrected, originalText: spellResult.original,
+        mindTrace: _lastMindTrace,
       };
     }
 
@@ -672,5 +686,18 @@ export function createSofiaEngine(
     return { answer: noMatch(inputText), method: null, score: 0, sentiment };
   }
 
-  return { getReply, bm25M, tfidfM, coMatrix, rebuildModels, intel };
+  function recordFeedback(firebaseKey: string, isPositive: boolean, category?: string) {
+    intel.recordClick(RT.lastUserQ || '', firebaseKey, []);
+    if (category) intel.recordOutcome(category, isPositive ? 1 : 0);
+    if (!isPositive && RT.lastUserQ) {
+      const topic = (RT.lastUserQ.split(/\s+/)[0] || '').slice(0, 24);
+      if (topic) intel.curiosity.requestLearning(topic, 'bn');
+    }
+  }
+
+  return {
+    getReply, bm25M, tfidfM, coMatrix, rebuildModels, intel,
+    lastMindTrace: () => _lastMindTrace,
+    recordFeedback,
+  };
 }

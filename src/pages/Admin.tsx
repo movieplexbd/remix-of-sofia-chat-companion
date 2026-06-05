@@ -13,8 +13,13 @@ import BackupTab from '../components/admin/BackupTab';
 import AutoTrainerTab from '../components/admin/AutoTrainerTab';
 import CharactersTab from '../components/admin/CharactersTab';
 import SlidesTab from '../components/admin/SlidesTab';
+import MindTab from '../components/admin/MindTab';
+import GraphTab from '../components/admin/GraphTab';
+import TestsTab from '../components/admin/TestsTab';
 import { useAdmin } from '../hooks/useAdmin';
 import { startAutoTrainer, stopAutoTrainer } from '../engine/intelligence/autoTrainer';
+import { startAutoImprovement, stopAutoImprovement } from '../engine/intelligence/autonomousImprovement';
+import { getSharedIntel } from '../lib/sharedIntel';
 import { Toaster } from 'sonner';
 
 export default function Admin() {
@@ -29,7 +34,8 @@ export default function Admin() {
       getQA: () => admin.all.qaData || {},
       applyVariant: (key, variants) => admin.mergeIntoQA(key, variants),
     });
-    return () => stopAutoTrainer();
+    startAutoImprovement(getSharedIntel());
+    return () => { stopAutoTrainer(); stopAutoImprovement(); };
   }, [unlocked, admin]);
 
   if (!unlocked) return <AdminLogin onUnlock={() => setUnlocked(true)} />;
@@ -45,6 +51,9 @@ export default function Admin() {
         {admin.busy && !Object.keys(admin.all.qaData || {}).length ? (
           <div className="text-sm text-muted-foreground">Loading…</div>
         ) : tab === 'dashboard' ? <DashboardTab admin={admin} />
+          : tab === 'mind' ? <MindTab />
+          : tab === 'graph' ? <GraphTab />
+          : tab === 'tests' ? <TestsTab />
           : tab === 'qa' ? <QATab admin={admin} />
           : tab === 'bulk' ? <BulkTab admin={admin} />
           : tab === 'trainer' ? <AutoTrainerTab admin={admin} />
