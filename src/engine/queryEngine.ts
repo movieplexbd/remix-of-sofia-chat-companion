@@ -383,6 +383,7 @@ export interface ReplyResult {
   spellCorrected?: boolean;
   originalText?: string | null;
   isMath?: boolean;
+  mindTrace?: import('./intelligence/autonomousMind').MindTrace | null;
 }
 
 export interface SofiaEngine {
@@ -392,6 +393,8 @@ export interface SofiaEngine {
   coMatrix: CoMatrix;
   rebuildModels: () => void;
   intel: ReturnType<typeof createIntelligence>;
+  lastMindTrace: () => import('./intelligence/autonomousMind').MindTrace | null;
+  recordFeedback: (firebaseKey: string, isPositive: boolean, category?: string) => void;
 }
 
 export function createSofiaEngine(
