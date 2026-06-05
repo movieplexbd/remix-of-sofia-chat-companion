@@ -104,6 +104,11 @@ export interface IntelligenceAPI {
   };
   resetLearning: () => void;
 
+  // v6.5 — Autonomous Mind
+  think: (input: MindInput) => MindTrace;
+  runInference: (depth?: number) => number;
+  recordOutcome: (domain: string, success: number) => void;
+
   // Sub-systems (direct access for admin tools)
   graph: KnowledgeGraph;
   memory: ContextMemory;
@@ -112,6 +117,10 @@ export interface IntelligenceAPI {
   ontology: Ontology;
   multiHop: MultiHopReasoner;
   facts: ContradictionStore;
+  inference: InferenceEngine;
+  curiosity: CuriosityEngine;
+  active: ActiveLearningEngine;
+  meta: MetaCognition;
 }
 
 export function createIntelligence(userSyn: Record<string, string[]> = {}): IntelligenceAPI {
