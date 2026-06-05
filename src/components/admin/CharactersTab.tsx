@@ -56,7 +56,14 @@ export default function CharactersTab({ admin }: { admin: any }) {
         {Object.entries(chars).map(([id, char]: [string, any]) => (
           <Card key={id}>
             <CardContent className="pt-6 flex justify-between items-center">
-              <span className="font-medium">{char.name}</span>
+              <Input 
+                value={char.name} 
+                onChange={async (e) => {
+                  const val = e.target.value;
+                  await admin.updatePath(`characters/${id}`, { name: val });
+                }}
+                className="border-none bg-transparent font-medium focus-visible:ring-0 shadow-none"
+              />
               <Button variant="ghost" size="icon" onClick={() => handleDelete(id)} className="text-destructive">
                 <Trash2 className="w-4 h-4" />
               </Button>

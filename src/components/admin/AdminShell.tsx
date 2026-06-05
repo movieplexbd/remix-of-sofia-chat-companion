@@ -10,7 +10,7 @@ export type AdminTab =
   | 'dashboard' | 'qa' | 'bulk' | 'synonyms' | 'intents'
   | 'entities' | 'config' | 'analytics' | 'insights'
   | 'power' | 'backup' | 'trainer' | 'characters' | 'slides'
-  | 'mind' | 'graph' | 'tests';
+  | 'mind' | 'graph' | 'tests' | 'templates' | 'spell' | 'sentiment';
 
 interface Props {
   active: AdminTab;
@@ -35,6 +35,9 @@ const TABS: { id: AdminTab; label: string; icon: any }[] = [
   { id: 'config', label: 'Config', icon: Settings },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'insights', label: 'Insights', icon: Lightbulb },
+  { id: 'templates', label: 'Templates', icon: MessageSquarePlus },
+  { id: 'spell', label: 'Spell Corrections', icon: BookA },
+  { id: 'sentiment', label: 'Sentiment Lexicon', icon: FlaskConical },
   { id: 'characters', label: 'Characters', icon: Tag },
   { id: 'slides', label: 'Slides', icon: LayoutDashboard },
 ];

@@ -80,17 +80,39 @@ export default function SlidesTab({ admin }: { admin: any }) {
         {Object.entries(slides).map(([id, slide]: [string, any]) => (
           <Card key={id} className="overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold">{slide.heading}</CardTitle>
+              <Input 
+                value={slide.heading}
+                onChange={e => admin.updatePath(`slides/${id}`, { heading: e.target.value })}
+                className="text-sm font-bold border-none bg-transparent focus-visible:ring-0 shadow-none h-auto p-0"
+              />
               <Button variant="ghost" size="icon" onClick={() => handleDelete(id)} className="text-destructive h-8 w-8">
                 <Trash2 className="w-4 h-4" />
               </Button>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                <img src={slide.image1} alt="Preview 1" className="h-20 w-full object-cover rounded" />
-                <img src={slide.image2} alt="Preview 2" className="h-20 w-full object-cover rounded" />
+            <CardContent className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <img src={slide.image1} alt="Preview 1" className="h-20 w-full object-cover rounded" />
+                  <Input 
+                    value={slide.image1}
+                    onChange={e => admin.updatePath(`slides/${id}`, { image1: e.target.value })}
+                    className="text-[10px] h-6 px-1"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <img src={slide.image2} alt="Preview 2" className="h-20 w-full object-cover rounded" />
+                  <Input 
+                    value={slide.image2}
+                    onChange={e => admin.updatePath(`slides/${id}`, { image2: e.target.value })}
+                    className="text-[10px] h-6 px-1"
+                  />
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground truncate">Memory: {slide.memoryData}</p>
+              <Textarea 
+                value={slide.memoryData}
+                onChange={e => admin.updatePath(`slides/${id}`, { memoryData: e.target.value })}
+                className="text-xs min-h-[40px] py-1"
+              />
             </CardContent>
           </Card>
         ))}

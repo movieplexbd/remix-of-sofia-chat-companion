@@ -16,6 +16,9 @@ import SlidesTab from '../components/admin/SlidesTab';
 import MindTab from '../components/admin/MindTab';
 import GraphTab from '../components/admin/GraphTab';
 import TestsTab from '../components/admin/TestsTab';
+import OntologyTab from '../components/admin/OntologyTab';
+import ConceptsTab from '../components/admin/ConceptsTab';
+import FactsTab from '../components/admin/FactsTab';
 import { useAdmin } from '../hooks/useAdmin';
 import { startAutoTrainer, stopAutoTrainer } from '../engine/intelligence/autoTrainer';
 import { startAutoImprovement, stopAutoImprovement } from '../engine/intelligence/autonomousImprovement';
@@ -65,8 +68,14 @@ export default function Admin() {
           : tab === 'config' ? <ConfigTab admin={admin} />
           : tab === 'analytics' ? <AnalyticsTab admin={admin} />
           : tab === 'insights' ? <InsightsTab admin={admin} />
+          : tab === 'templates' ? <KeyListTab admin={admin} path="responseTemplates" title="Response Templates" desc="Templates for bot responses. Use {{name}}, {{answer}} etc." />
+          : tab === 'spell' ? <KeyListTab admin={admin} path="spellCorrections" title="Spell Corrections" desc="Map common typos to correct words." singleValue />
+          : tab === 'sentiment' ? <KeyListTab admin={admin} path="sentimentLexicon" title="Sentiment Lexicon" desc="Assign scores to words (-1 to 1)." singleValue />
           : tab === 'characters' ? <CharactersTab admin={admin} />
           : tab === 'slides' ? <SlidesTab admin={admin} />
+          : tab === 'ontology' ? <OntologyTab />
+          : tab === 'concepts' ? <ConceptsTab />
+          : tab === 'facts' ? <FactsTab />
           : null}
       </AdminShell>
     </>
