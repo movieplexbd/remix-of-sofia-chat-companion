@@ -38,6 +38,13 @@ import { detectTopics, topicBoost, type TopicHit } from './topicDetector';
 import { ContradictionStore }           from './contradictionDetector';
 import { aggregate, type AggregatedEvidence } from './evidenceAggregator';
 
+// v6.5 additions — Autonomous Mind
+import { InferenceEngine }              from './inferenceEngine';
+import { ActiveLearningEngine }         from './activeLearningEngine';
+import { CuriosityEngine }              from './curiosityEngine';
+import { MetaCognition }                from './metaCognition';
+import { think, type MindTrace, type MindInput } from './autonomousMind';
+
 export interface UnderstoodQuery {
   raw: string;
   meta: QueryMeta;
@@ -97,6 +104,11 @@ export interface IntelligenceAPI {
   };
   resetLearning: () => void;
 
+  // v6.5 — Autonomous Mind
+  think: (input: MindInput) => MindTrace;
+  runInference: (depth?: number) => number;
+  recordOutcome: (domain: string, success: number) => void;
+
   // Sub-systems (direct access for admin tools)
   graph: KnowledgeGraph;
   memory: ContextMemory;
@@ -105,6 +117,10 @@ export interface IntelligenceAPI {
   ontology: Ontology;
   multiHop: MultiHopReasoner;
   facts: ContradictionStore;
+  inference: InferenceEngine;
+  curiosity: CuriosityEngine;
+  active: ActiveLearningEngine;
+  meta: MetaCognition;
 }
 
 export function createIntelligence(userSyn: Record<string, string[]> = {}): IntelligenceAPI {
@@ -115,6 +131,10 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
   const ontology = new Ontology();
   const multiHop = new MultiHopReasoner(graph);
   const facts    = new ContradictionStore();
+  const inference = new InferenceEngine(graph);
+  const curiosity = new CuriosityEngine();
+  const active    = new ActiveLearningEngine();
+  const meta      = new MetaCognition();
   const resultCache = new LRUCache<string, RankedResult[]>(80, 'results');
   const queryCache  = new LRUCache<string, UnderstoodQuery>(120, 'queries');
 
@@ -276,10 +296,16 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
     resetLearning: () => {
       resetWeights(); clearFeedback(); memory.clear();
       resultCache.clear(); queryCache.clear(); clearSuggestions();
+      inference.clear(); curiosity.clear(); active.clear(); meta.clear();
     },
+
+    think: (input) => think(input, { graph, concepts, multiHop, inference, curiosity, active, meta }),
+    runInference: (depth = 3) => inference.inferRelations(depth),
+    recordOutcome: (domain, success) => meta.observe(domain, success),
 
     graph, memory, reasoning: reasoner,
     concepts, ontology, multiHop, facts,
+    inference, curiosity, active, meta,
   };
 }
 
