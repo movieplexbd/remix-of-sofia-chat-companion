@@ -660,6 +660,7 @@ export function createSofiaEngine(
         answer: chosen,
         category: winner.item.category,
       });
+      intel.logReasoning({ query: inputText, answer: chosen, trace: _lastMindTrace });
 
       const related = feat(D.cfg, 'relatedQuestions') ? findRelated(winner.item, D.qa) : [];
       const followUps = generateFollowUps(winner.item, RT.history, D.qa);
@@ -688,7 +689,9 @@ export function createSofiaEngine(
 
   function recordFeedback(firebaseKey: string, isPositive: boolean, category?: string) {
     intel.recordClick(RT.lastUserQ || '', firebaseKey, []);
-    if (category) intel.recordOutcome(category, isPositive ? 1 : 0);
+    intel.recordOutcome(category || 'general', isPositive ? 1 : 0);
+    const { recordOutcome } = require('./intelligence/feedbackLearning');
+    recordOutcome(isPositive);
     if (!isPositive && RT.lastUserQ) {
       const topic = (RT.lastUserQ.split(/\s+/)[0] || '').slice(0, 24);
       if (topic) intel.curiosity.requestLearning(topic, 'bn');

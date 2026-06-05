@@ -5,7 +5,7 @@
 import { useMemo, useState } from 'react';
 import { getSharedIntel } from '../../lib/sharedIntel';
 import { generateHypothesis } from '../../engine/intelligence/hypothesisEngine';
-import { Brain, AlertCircle, Lightbulb, Activity, BookOpen, RefreshCw } from 'lucide-react';
+import { Brain, AlertCircle, Lightbulb, Activity, BookOpen, RefreshCw, Zap } from 'lucide-react';
 import { runImprovementNow, lastReport } from '../../engine/intelligence/autonomousImprovement';
 
 export default function MindTab() {
@@ -23,7 +23,9 @@ export default function MindTab() {
     const hyps = generateHypothesis(
       concepts.map(c => ({ key: `concept:${c.id}`, weight: c.aliases.length / 10 })),
     ).slice(0, 12);
-    return { inferred, gaps, weak, learned, pending, hyps };
+    const traces = intel.getReasoningTraces();
+    const stats = intel.getFeedbackStats();
+    return { inferred, gaps, weak, learned, pending, hyps, traces, stats };
   }, [intel, tick]);
 
   const report = lastReport();
@@ -65,6 +67,32 @@ export default function MindTab() {
 
         <Card icon={<BookOpen className="w-4 h-4 text-emerald-700" />} title="Learned Facts" count={data.learned.length}>
           <List items={data.learned.map(l => `${l.topic} → ${l.content}`)} />
+        </Card>
+
+        <Card icon={<Activity className="w-4 h-4 text-indigo-500" />} title="Reasoning Traces" count={data.traces.length}>
+          <List items={data.traces.map(t => `${t.query} → ${t.trace?.intent || 'unknown'}`)} />
+        </Card>
+
+        <Card icon={<Zap className="w-4 h-4 text-blue-500" />} title="Feedback Loop" count={data.stats.total}>
+          <div className="space-y-2 p-2">
+            <div className="flex justify-between text-[10px] text-muted-foreground uppercase">
+              <span>Success Rate</span>
+              <span>{(data.stats.successRate * 100).toFixed(1)}%</span>
+            </div>
+            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-500 transition-all" style={{ width: `${data.stats.successRate * 100}%` }} />
+            </div>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/20 text-center">
+                <div className="text-lg font-bold text-emerald-600">{data.stats.success}</div>
+                <div className="text-[10px] text-muted-foreground">Helpful</div>
+              </div>
+              <div className="p-2 rounded bg-red-500/10 border border-red-500/20 text-center">
+                <div className="text-lg font-bold text-red-600">{data.stats.failure}</div>
+                <div className="text-[10px] text-muted-foreground">Not Helpful</div>
+              </div>
+            </div>
+          </div>
         </Card>
       </div>
 

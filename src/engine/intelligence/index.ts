@@ -86,6 +86,7 @@ export interface IntelligenceAPI {
   cacheGet: (q: string) => RankedResult[] | undefined;
   cacheSet: (q: string, results: RankedResult[]) => void;
   clearCaches: () => void;
+  getFeedbackStats: () => { successRate: number; total: number; success: number; failure: number };
 
   // Diagnostics
   getDiagnostics: () => {
@@ -108,6 +109,8 @@ export interface IntelligenceAPI {
   think: (input: MindInput) => MindTrace;
   runInference: (depth?: number) => number;
   recordOutcome: (domain: string, success: number) => void;
+  logReasoning: (trace: any) => void;
+  getReasoningTraces: () => any[];
 
   // Sub-systems (direct access for admin tools)
   graph: KnowledgeGraph;
@@ -275,6 +278,10 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
     cacheGet: (q) => resultCache.get(q),
     cacheSet: (q, r) => resultCache.set(q, r),
     clearCaches: () => { resultCache.clear(); queryCache.clear(); },
+    getFeedbackStats: () => {
+      const { getStats } = require('./feedbackLearning');
+      return getStats();
+    },
 
     getDiagnostics: () => ({
       weights: getAllWeights(),
@@ -302,6 +309,18 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
     think: (input) => think(input, { graph, concepts, multiHop, inference, curiosity, active, meta }),
     runInference: (depth = 3) => inference.inferRelations(depth),
     recordOutcome: (domain, success) => meta.observe(domain, success),
+    logReasoning: (trace: any) => {
+      try {
+        const traces = JSON.parse(localStorage.getItem('sofia_reasoning_traces') || '[]');
+        traces.unshift({ ...trace, ts: Date.now() });
+        localStorage.setItem('sofia_reasoning_traces', JSON.stringify(traces.slice(0, 50)));
+      } catch (e) { console.error('logReasoning', e); }
+    },
+    getReasoningTraces: () => {
+      try {
+        return JSON.parse(localStorage.getItem('sofia_reasoning_traces') || '[]');
+      } catch { return []; }
+    },
 
     graph, memory, reasoning: reasoner,
     concepts, ontology, multiHop, facts,

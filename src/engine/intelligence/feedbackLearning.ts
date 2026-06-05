@@ -24,6 +24,8 @@ interface FeedbackState {
   events: FeedbackEvent[];
   // Aggregated per-result counters
   agg: Record<string, { clicks: number; ignores: number; shown: number }>;
+  successCount?: number;
+  failureCount?: number;
 }
 
 function load(): FeedbackState {
@@ -31,7 +33,7 @@ function load(): FeedbackState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
-  return { events: [], agg: {} };
+  return { events: [], agg: {}, successCount: 0, failureCount: 0 };
 }
 
 function save(s: FeedbackState) {
@@ -81,8 +83,28 @@ export function topQueries(limit = 5) {
     .map(([query, count]) => ({ query, count }));
 }
 
+export function recordOutcome(success: boolean) {
+  const s = ensure();
+  if (success) s.successCount = (s.successCount || 0) + 1;
+  else s.failureCount = (s.failureCount || 0) + 1;
+  save(s);
+}
+
+export function getStats() {
+  const s = ensure();
+  const succ = s.successCount || 0;
+  const fail = s.failureCount || 0;
+  const total = succ + fail;
+  return {
+    successRate: total > 0 ? (succ / total) : 0,
+    total,
+    success: succ,
+    failure: fail,
+  };
+}
+
 export function clearFeedback() {
-  state = { events: [], agg: {} };
+  state = { events: [], agg: {}, successCount: 0, failureCount: 0 };
   try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 }
 
