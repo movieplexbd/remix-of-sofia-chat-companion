@@ -3,13 +3,14 @@ import { Link } from 'react-router-dom';
 import {
   LayoutDashboard, MessageSquarePlus, Upload, BookA, Brain,
   Tag, Settings, BarChart3, Lightbulb, ArrowLeft, Database, LogOut,
-  Wrench, Save, Brain as BrainIcon,
+  Wrench, Save, Brain as BrainIcon, Network, FlaskConical,
 } from 'lucide-react';
 
 export type AdminTab =
   | 'dashboard' | 'qa' | 'bulk' | 'synonyms' | 'intents'
   | 'entities' | 'config' | 'analytics' | 'insights'
-  | 'power' | 'backup' | 'trainer' | 'characters' | 'slides';
+  | 'power' | 'backup' | 'trainer' | 'characters' | 'slides'
+  | 'mind' | 'graph' | 'tests';
 
 interface Props {
   active: AdminTab;
@@ -20,9 +21,12 @@ interface Props {
 
 const TABS: { id: AdminTab; label: string; icon: any }[] = [
   { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+  { id: 'mind', label: 'Mind', icon: BrainIcon },
+  { id: 'graph', label: 'Knowledge Graph', icon: Network },
+  { id: 'tests', label: 'Intelligence Tests', icon: FlaskConical },
   { id: 'qa', label: 'QA Manager', icon: MessageSquarePlus },
   { id: 'bulk', label: 'Bulk Upload', icon: Upload },
-  { id: 'trainer', label: 'Auto-Trainer', icon: BrainIcon },
+  { id: 'trainer', label: 'Auto-Trainer', icon: Brain },
   { id: 'power', label: 'Power Tools', icon: Wrench },
   { id: 'backup', label: 'Backup', icon: Save },
   { id: 'synonyms', label: 'Synonyms', icon: BookA },
