@@ -131,6 +131,10 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
   const ontology = new Ontology();
   const multiHop = new MultiHopReasoner(graph);
   const facts    = new ContradictionStore();
+  const inference = new InferenceEngine(graph);
+  const curiosity = new CuriosityEngine();
+  const active    = new ActiveLearningEngine();
+  const meta      = new MetaCognition();
   const resultCache = new LRUCache<string, RankedResult[]>(80, 'results');
   const queryCache  = new LRUCache<string, UnderstoodQuery>(120, 'queries');
 
@@ -292,10 +296,16 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
     resetLearning: () => {
       resetWeights(); clearFeedback(); memory.clear();
       resultCache.clear(); queryCache.clear(); clearSuggestions();
+      inference.clear(); curiosity.clear(); active.clear(); meta.clear();
     },
+
+    think: (input) => think(input, { graph, concepts, multiHop, inference, curiosity, active, meta }),
+    runInference: (depth = 3) => inference.inferRelations(depth),
+    recordOutcome: (domain, success) => meta.observe(domain, success),
 
     graph, memory, reasoning: reasoner,
     concepts, ontology, multiHop, facts,
+    inference, curiosity, active, meta,
   };
 }
 
