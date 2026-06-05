@@ -47,6 +47,7 @@ export interface RankInputs {
   exactTokens?: string[];      // original tokens
   graph?: KnowledgeGraph;
   allQueryTokens?: string[];   // for graph match
+  interestLevel?: number;      // 0..1 (Phase 23)
 }
 
 export function rank(inputs: RankInputs): RankedResult[] {
@@ -110,5 +111,12 @@ export function rank(inputs: RankInputs): RankedResult[] {
 
   // Stage 7 — sort
   ranked.sort((a, b) => b.finalScore - a.finalScore);
-  return ranked;
+
+  // Phase 23 — Dynamic Threshold
+  const maxScore = ranked.length > 0 ? ranked[0].finalScore : 0;
+  const baseThreshold = 0.12;
+  const interestFactor = inputs.interestLevel ? inputs.interestLevel * 0.08 : 0;
+  const dynamicThreshold = Math.max(0.02, (baseThreshold - interestFactor) * maxScore);
+
+  return ranked.filter(r => r.finalScore >= dynamicThreshold);
 }

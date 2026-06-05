@@ -2,11 +2,19 @@
  * Phase 29 — Goal & Intent Engine
  * Extracts a goal tree from user input using verb/pattern heuristics.
  */
+export interface Milestone {
+  id: string;
+  title: string;
+  completed: boolean;
+  tasks: string[];
+}
+
 export interface GoalTree {
   goal: string;
   intent: string;
   subGoals: string[];
   objectives: string[];
+  milestones: Milestone[];
 }
 
 const GOAL_PATTERNS = [
@@ -57,10 +65,40 @@ function inferDomain(goal: string): string {
 export function createGoalTree(text: string): GoalTree {
   const goal = extractGoal(text);
   const intent = identifyIntent(text);
-  if (!goal) return { goal: '', intent, subGoals: [], objectives: [] };
+  if (!goal) return { goal: '', intent, subGoals: [], objectives: [], milestones: [] };
   const domain = inferDomain(goal);
   const subGoals = SUBGOAL_TEMPLATES[domain] || ['Research', 'Plan', 'Execute', 'Review'];
-  return { goal, intent, subGoals, objectives: generateObjectives(subGoals) };
+  
+  const milestones: Milestone[] = subGoals.map((s, i) => ({
+    id: `m-${i}`,
+    title: s,
+    completed: false,
+    tasks: [`Research ${s}`, `Execute ${s}`]
+  }));
+
+  const tree: GoalTree = { 
+    goal, 
+    intent, 
+    subGoals, 
+    objectives: generateObjectives(subGoals),
+    milestones
+  };
+
+  // Persist if in browser
+  if (typeof localStorage !== 'undefined') {
+    const existing = JSON.parse(localStorage.getItem('sofia_goals_v1') || '[]');
+    existing.push({ ...tree, ts: Date.now() });
+    localStorage.setItem('sofia_goals_v1', JSON.stringify(existing.slice(-10)));
+  }
+
+  return tree;
+}
+
+export function getPersistentGoals(): GoalTree[] {
+  if (typeof localStorage !== 'undefined') {
+    return JSON.parse(localStorage.getItem('sofia_goals_v1') || '[]');
+  }
+  return [];
 }
 
 export function generateObjectives(subGoals: string[]): string[] {

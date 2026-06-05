@@ -8,12 +8,18 @@
 import type { RankedResult } from './rankingPipeline';
 import type { ReasoningResult } from './reasoningEngine';
 
+export interface ReasoningStep {
+  thought: string;
+  evidence?: string;
+}
+
 export interface Explanation {
   summary: string;          // One-line summary
   reasons: string[];        // Bullet-point reasons
   confidence: string;       // "নিশ্চিত" | "সম্ভবত" | "অনুমান"
   confidencePct: number;
   engineList: string[];     // Which engines matched
+  reasoningChain: ReasoningStep[]; // Phase 25
 }
 
 const ENGINE_LABELS: Record<string, string> = {
@@ -112,7 +118,27 @@ export function generateExplanation(
     ? `${confidencePct}% নিশ্চিততায় ${uniqueEngines.length}টি engine মিলেছে`
     : `${uniqueEngines.length} engine(s) matched with ${confidencePct}% confidence`;
 
-  return { summary, reasons, confidence, confidencePct, engineList: uniqueEngines };
+  const reasoningChain: ReasoningStep[] = [];
+  if (breakdown.base > 0) {
+    reasoningChain.push({
+      thought: lang === 'bn' ? 'প্রাথমিক সার্চ রেজাল্ট পাওয়া গেছে।' : 'Initial search results found.',
+      evidence: `${uniqueEngines.join(', ')} engines`
+    });
+  }
+  if (breakdown.contextBoost > 1.1) {
+    reasoningChain.push({
+      thought: lang === 'bn' ? 'বর্তমান আলোচনার বিষয়ের সাথে মিল পাওয়া গেছে।' : 'Matched current conversation topic.',
+      evidence: `Boost: ${breakdown.contextBoost.toFixed(1)}`
+    });
+  }
+  if (breakdown.graphBoost > 1.1) {
+    reasoningChain.push({
+      thought: lang === 'bn' ? 'নলেজ গ্রাফে প্রাসঙ্গিক সংযোগ পাওয়া গেছে।' : 'Relevant connections found in knowledge graph.',
+      evidence: 'KG relation boost'
+    });
+  }
+
+  return { summary, reasons, confidence, confidencePct, engineList: uniqueEngines, reasoningChain };
 }
 
 /** Format explanation as markdown text for chat display */

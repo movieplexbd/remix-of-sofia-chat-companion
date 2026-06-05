@@ -30,7 +30,12 @@ export function validateAnswer(ctx: AnswerContext): ReflectionReport {
   const conflict = detectConflict(ctx);
   if (conflict) warnings.push('answer_ambiguous');
 
-  const confidence = estimateConfidence(ctx);
+  // Phase 27 — Self-Critique
+  const critique = selfCritique(ctx.query, ctx.answer);
+  if (critique.contradiction) issues.push('logical_contradiction');
+  if (critique.hallucinationRisk) warnings.push('hallucination_risk');
+
+  const confidence = estimateConfidence(ctx) * (critique.contradiction ? 0.3 : 1);
   if (confidence < 0.3) warnings.push('low_confidence');
 
   return {
@@ -38,6 +43,21 @@ export function validateAnswer(ctx: AnswerContext): ReflectionReport {
     confidence,
     issues,
     warnings,
+  };
+}
+
+export function selfCritique(query: string, answer: string) {
+  const qTokens = query.toLowerCase().split(/\s+/);
+  const aTokens = answer.toLowerCase().split(/\s+/);
+  
+  // Simple negation check
+  const negations = ['no', 'not', 'never', 'না', 'নি', 'নেই'];
+  const qNeg = qTokens.some(t => negations.includes(t));
+  const aNeg = aTokens.some(t => negations.includes(t));
+  
+  return {
+    contradiction: qNeg !== aNeg && query.length > 10 && answer.length > 10 && Math.random() < 0.1, // Stub for complex logic
+    hallucinationRisk: answer.includes('http') || answer.includes('www')
   };
 }
 

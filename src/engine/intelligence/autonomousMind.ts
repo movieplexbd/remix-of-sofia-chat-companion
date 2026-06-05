@@ -12,6 +12,7 @@ import { createPlan, type Plan }                              from './plannerEng
 import { generateHypothesis, type Hypothesis, type Signal }   from './hypothesisEngine';
 import { generateStyleProfile, type StyleProfile }            from './emotionEngine';
 import { validateAnswer, type ReflectionReport }              from './reflectionEngine';
+import { DecisionEngine, type Decision }                      from './decisionEngine';
 import type { InferenceEngine }                               from './inferenceEngine';
 import type { CuriosityEngine }                               from './curiosityEngine';
 import type { ActiveLearningEngine }                          from './activeLearningEngine';
@@ -31,6 +32,7 @@ export interface MindTrace {
   inferred: string[];
   clarification: string | null;
   reflection: ReflectionReport | null;
+  decision: Decision | null;
   weakDomains: string[];
 }
 
@@ -53,6 +55,7 @@ export interface MindDeps {
   curiosity: CuriosityEngine;
   active: ActiveLearningEngine;
   meta: MetaCognition;
+  decision: DecisionEngine;
 }
 
 export function think(input: MindInput, deps: MindDeps): MindTrace {
@@ -97,6 +100,15 @@ export function think(input: MindInput, deps: MindDeps): MindTrace {
     contradictions: input.contradictions,
   });
 
+  // Decision Analysis — Phase 21
+  const decision = deps.decision.analyze({
+    query: input.query,
+    answer: input.answer,
+    confidence: reflection.confidence,
+    evidenceCount: input.candidateCount,
+    category: input.category
+  });
+
   // Curiosity / active learning gating
   let clarification: string | null = null;
   if (reflection.confidence < 0.3 && input.query.length > 4) {
@@ -120,6 +132,7 @@ export function think(input: MindInput, deps: MindDeps): MindTrace {
     inferred: [...new Set(inferred)],
     clarification,
     reflection,
+    decision,
     weakDomains,
   };
 }

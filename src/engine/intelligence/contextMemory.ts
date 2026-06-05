@@ -43,12 +43,18 @@ export class ContextMemory {
   private maxShort = 20;
   private currentTopic: string | null = null;
   private topicTokens: string[] = [];
+  private depth: number = 0;
+  private topicShiftCount: number = 0;
 
   pushTurn(turn: ConversationTurn) {
     this.short.push(turn);
     if (this.short.length > this.maxShort) this.short.shift();
+    this.depth++;
 
     if (turn.category) {
+      if (this.currentTopic && this.currentTopic !== turn.category) {
+        this.topicShiftCount++;
+      }
       this.long.topicCounts[turn.category] = (this.long.topicCounts[turn.category] || 0) + 1;
       this.long.lastTopic = turn.category;
       this.currentTopic = turn.category;
@@ -91,6 +97,8 @@ export class ContextMemory {
       shortLen: this.short.length,
       currentTopic: this.currentTopic,
       topTopics: this.getTopTopics(),
+      depth: this.depth,
+      topicShiftCount: this.topicShiftCount,
     };
   }
 }

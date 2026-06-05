@@ -42,6 +42,7 @@ import { WorldModelEngine } from './worldModelEngine';
 import { EpisodicMemory } from './episodicMemory';
 import { SemanticMemory } from './semanticMemory';
 import { EmotionEngine } from './emotionEngine';
+import { DecisionEngine } from './decisionEngine'; // Phase 21
 
 // v6.5 additions — Autonomous Mind
 import { InferenceEngine }              from './inferenceEngine';
@@ -134,6 +135,7 @@ export interface IntelligenceAPI {
   episodic: EpisodicMemory;
   semantic: SemanticMemory;
   emotion: EmotionEngine;
+  decision: DecisionEngine; // Phase 21
 }
 
 export function createIntelligence(userSyn: Record<string, string[]> = {}): IntelligenceAPI {
@@ -153,6 +155,7 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
   const episodic = new EpisodicMemory();
   const semantic = new SemanticMemory();
   const emotion = new EmotionEngine();
+  const decision = new DecisionEngine(); // Phase 21
   const resultCache = new LRUCache<string, RankedResult[]>(80, 'results');
   const queryCache  = new LRUCache<string, UnderstoodQuery>(120, 'queries');
 
@@ -339,7 +342,7 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
 
     graph, memory, reasoning: reasoner,
     concepts, ontology, multiHop, facts,
-    inference, curiosity, active, meta, orchestrator, worldModel, episodic, semantic, emotion,
+    inference, curiosity, active, meta,     orchestrator, worldModel, episodic, semantic, emotion, decision,
   };
 }
 
