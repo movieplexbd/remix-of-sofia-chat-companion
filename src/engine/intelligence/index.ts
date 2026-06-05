@@ -342,7 +342,8 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
 
     graph, memory, reasoning: reasoner,
     concepts, ontology, multiHop, facts,
-    inference, curiosity, active, meta,     orchestrator, worldModel, episodic, semantic, emotion, decision,
+    inference, curiosity, active, meta, orchestrator, worldModel, episodic, semantic, emotion, decision,
+    causal, temporal, storage,
   };
 }
 

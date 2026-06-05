@@ -594,6 +594,9 @@ export function createSofiaEngine(
     // ── Intelligence Layer (Phase 1+2+3+7): query understanding + follow-up resolution ──
     const uq = intel.understand(inputText);
 
+    // Phase 9: Temporal Context Detection
+    const timeContext = intel.temporal.detectTimeContext(tokens);
+
     // Cache check (Phase 9)
     const cached = intel.cacheGet(uq.contextualText);
 
@@ -616,7 +619,23 @@ export function createSofiaEngine(
     const intelCandidates: RawCandidate[] = candidates.map(c => ({
       item: c.item, score: c._score, engine: c._method as EngineName,
     }));
-    const intelRanked = cached ?? intel.rankCandidates(intelCandidates, uq);
+    let intelRanked = cached ?? intel.rankCandidates(intelCandidates, uq);
+    
+    // Phase 8: Causal Inference Integration
+    if (!cached && intelRanked.length > 0) {
+      intelRanked = intelRanked.map(r => {
+        let causalBoost = 1.0;
+        tokens.forEach(t => {
+          const effects = intel.causal.getEffects(t);
+          const itemText = (r.item.originalQuestions || []).join(' ').toLowerCase();
+          if (effects.some(e => itemText.includes(e.effect))) {
+            causalBoost *= 1.15;
+          }
+        });
+        return { ...r, finalScore: r.finalScore * causalBoost };
+      }).sort((a, b) => b.finalScore - a.finalScore);
+    }
+
     if (!cached && intelRanked.length) intel.cacheSet(uq.contextualText, intelRanked);
 
     // Merge: prefer intelligence ranking when it has results; fall back to ensembleVote
@@ -649,6 +668,15 @@ export function createSofiaEngine(
 
       intel.recordShown(inputText, winner.item.firebaseKey ?? null);
       intel.recordTurn(inputText, winner.item.answer, winner.item.category, uq.normalized.tokens);
+
+      // Phase 23: Local Storage Persistence
+      intel.storage.save('episodes', {
+        id: `ep_${Date.now()}`,
+        query: inputText,
+        answer: winner.item.answer,
+        category: winner.item.category,
+        timestamp: Date.now()
+      }).catch(e => console.error('Phase 23 storage error', e));
 
       // Phase A — Autonomous Mind pipeline
       _lastMindTrace = intel.think({
