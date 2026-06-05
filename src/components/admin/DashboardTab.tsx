@@ -44,7 +44,7 @@ export default function DashboardTab({ admin }: { admin: Admin }) {
         <Stat icon={<Database className="w-4 h-4" />} label="Spell Fixes" value={counts.spell} />
         <Stat icon={<Tag className="w-4 h-4" />} label="Characters" value={Object.keys(admin.all.characters || {}).length} />
         <Stat icon={<Database className="w-4 h-4" />} label="Image Slides" value={Object.keys(admin.all.slides || {}).length} />
-        <Stat icon={<Brain className="w-4 h-4" />} label="Engines Active" value={8} hint="BM25·BM25F·TF-IDF·N-gram·Fuzzy·Phonetic·Jaccard·Substring" />
+        <Stat icon={<Brain className="w-4 h-4" />} label="Engines Active" value={12} hint="BM25·BM25F·TF-IDF·N-gram·Fuzzy·Phonetic·Jaccard·Substring·Decision·Reflection·Goal·Context" />
       </div>
 
       <Section title="Categories" desc="QA distribution by category">

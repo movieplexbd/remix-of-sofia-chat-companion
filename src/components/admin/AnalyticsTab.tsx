@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Section, Stat } from './Stat';
-import { BarChart3, Activity, Zap } from 'lucide-react';
+import { BarChart3, Activity, Zap, Layers, GitBranch } from 'lucide-react';
 import type { useAdmin } from '../../hooks/useAdmin';
 
 type Admin = ReturnType<typeof useAdmin>;
@@ -16,6 +16,12 @@ export default function AnalyticsTab({ admin }: { admin: Admin }) {
       const raw = localStorage.getItem('sofia-feedback-v1');
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
+  }, []);
+
+  const cognitiveStats = useMemo(() => {
+    const intel = (window as any).sofiaIntel;
+    if (!intel) return null;
+    return intel.getDiagnostics().memory;
   }, []);
   const weightsRaw = useMemo(() => {
     try { return JSON.parse(localStorage.getItem('sofia-engine-weights-v1') || 'null'); }
@@ -36,6 +42,8 @@ export default function AnalyticsTab({ admin }: { admin: Admin }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Stat icon={<BarChart3 className="w-4 h-4" />} label="Tracked queries" value={topQueries.length} />
         <Stat icon={<Activity className="w-4 h-4" />} label="Clicked results" value={topClicks.length} />
+        <Stat icon={<Layers className="w-4 h-4 text-blue-500" />} label="Context Depth" value={cognitiveStats?.depth || 0} />
+        <Stat icon={<GitBranch className="w-4 h-4 text-purple-500" />} label="Topic Shifts" value={cognitiveStats?.topicShiftCount || 0} />
         <Stat icon={<Zap className="w-4 h-4" />} label="Adaptive weights" value={weightsRaw ? Object.keys(weightsRaw).length : 0} />
         <Stat label="Dataset size" value={qaCount} />
       </div>

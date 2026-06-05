@@ -75,7 +75,9 @@ export function useSofia(data: DataStore | null, db: Database | null) {
     if (!data) return null;
     const rt = rtRef.current;
     rt.initialized = true;
-    return createSofiaEngine(data, rt, db);
+    const e = createSofiaEngine(data, rt, db);
+    if (typeof window !== 'undefined' && e) (window as any).sofiaIntel = e.intel;
+    return e;
   }, [data, db]);
 
   const setPersonality = useCallback((p: string) => {

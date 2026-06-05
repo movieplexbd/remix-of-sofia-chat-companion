@@ -5,7 +5,7 @@
 import { useMemo, useState } from 'react';
 import { getSharedIntel } from '../../lib/sharedIntel';
 import { generateHypothesis } from '../../engine/intelligence/hypothesisEngine';
-import { Brain, AlertCircle, Lightbulb, Activity, BookOpen, RefreshCw, Zap } from 'lucide-react';
+import { Brain, AlertCircle, Lightbulb, Activity, BookOpen, RefreshCw, Zap, ShieldCheck, Search, MessageSquare } from 'lucide-react';
 import { runImprovementNow, lastReport } from '../../engine/intelligence/autonomousImprovement';
 
 export default function MindTab() {
@@ -25,7 +25,8 @@ export default function MindTab() {
     ).slice(0, 12);
     const traces = intel.getReasoningTraces();
     const stats = intel.getFeedbackStats();
-    return { inferred, gaps, weak, learned, pending, hyps, traces, stats };
+    const goals = intel.getDiagnostics().memory.depth > 0 ? (intel as any).getPersistentGoals?.() || [] : [];
+    return { inferred, gaps, weak, learned, pending, hyps, traces, stats, goals };
   }, [intel, tick]);
 
   const report = lastReport();
@@ -70,7 +71,48 @@ export default function MindTab() {
         </Card>
 
         <Card icon={<Activity className="w-4 h-4 text-indigo-500" />} title="Reasoning Traces" count={data.traces.length}>
-          <List items={data.traces.map(t => `${t.query} → ${t.trace?.intent || 'unknown'}`)} />
+          <div className="space-y-2 p-1">
+            {data.traces.map((t, i) => (
+              <div key={i} className="p-2 rounded bg-background/40 border border-border/50 text-[10px] space-y-1">
+                <div className="font-medium flex items-center gap-1"><Search className="w-3 h-3"/> {t.query}</div>
+                <div className="text-muted-foreground flex items-center gap-1"><Zap className="w-3 h-3 text-yellow-500"/> Intent: {t.trace?.intent}</div>
+                {t.trace?.decision && (
+                  <div className="mt-1 pt-1 border-t border-border/30">
+                    <div className="text-emerald-500 font-medium">Decision: {t.trace.decision.recommendation}</div>
+                    <div className="text-muted-foreground italic">Conf: {(t.trace.decision.confidence * 100).toFixed(0)}%</div>
+                  </div>
+                )}
+                {t.trace?.reflection && (
+                  <div className="flex gap-1 flex-wrap mt-1">
+                    {t.trace.reflection.warnings.map((w: string, j: number) => (
+                      <span key={j} className="px-1 rounded bg-yellow-500/10 text-yellow-600 border border-yellow-500/20">{w}</span>
+                    ))}
+                    {t.trace.reflection.issues.map((iss: string, j: number) => (
+                      <span key={j} className="px-1 rounded bg-red-500/10 text-red-600 border border-red-500/20">{iss}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card icon={<ShieldCheck className="w-4 h-4 text-emerald-500" />} title="Active Goals" count={data.goals.length}>
+          <div className="space-y-2 p-1">
+            {data.goals.map((g: any, i: number) => (
+              <div key={i} className="p-2 rounded bg-background/40 border border-border/50 text-[10px]">
+                <div className="font-medium flex items-center gap-1"><Zap className="w-3 h-3 text-primary"/> {g.goal}</div>
+                <div className="text-muted-foreground mt-1">
+                  {g.milestones?.map((m: any, j: number) => (
+                    <div key={j} className="flex items-center gap-1">
+                      <div className={`w-1.5 h-1.5 rounded-full ${m.completed ? 'bg-emerald-500' : 'bg-muted'}`} />
+                      {m.title}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </Card>
 
         <Card icon={<Zap className="w-4 h-4 text-blue-500" />} title="Feedback Loop" count={data.stats.total}>
