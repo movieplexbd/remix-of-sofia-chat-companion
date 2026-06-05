@@ -39,6 +39,9 @@ import { ContradictionStore }           from './contradictionDetector';
 import { aggregate, type AggregatedEvidence } from './evidenceAggregator';
 import { RetrievalOrchestrator } from './retrievalOrchestrator';
 import { WorldModelEngine } from './worldModelEngine';
+import { EpisodicMemory } from './episodicMemory';
+import { SemanticMemory } from './semanticMemory';
+import { EmotionEngine } from './emotionEngine';
 
 // v6.5 additions — Autonomous Mind
 import { InferenceEngine }              from './inferenceEngine';
@@ -128,6 +131,9 @@ export interface IntelligenceAPI {
   meta: MetaCognition;
   orchestrator: RetrievalOrchestrator;
   worldModel: WorldModelEngine;
+  episodic: EpisodicMemory;
+  semantic: SemanticMemory;
+  emotion: EmotionEngine;
 }
 
 export function createIntelligence(userSyn: Record<string, string[]> = {}): IntelligenceAPI {
@@ -144,6 +150,9 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
   const meta      = new MetaCognition();
   const orchestrator = new RetrievalOrchestrator();
   const worldModel = new WorldModelEngine();
+  const episodic = new EpisodicMemory();
+  const semantic = new SemanticMemory();
+  const emotion = new EmotionEngine();
   const resultCache = new LRUCache<string, RankedResult[]>(80, 'results');
   const queryCache  = new LRUCache<string, UnderstoodQuery>(120, 'queries');
 
@@ -330,7 +339,7 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
 
     graph, memory, reasoning: reasoner,
     concepts, ontology, multiHop, facts,
-    inference, curiosity, active, meta, orchestrator, worldModel,
+    inference, curiosity, active, meta, orchestrator, worldModel, episodic, semantic, emotion,
   };
 }
 

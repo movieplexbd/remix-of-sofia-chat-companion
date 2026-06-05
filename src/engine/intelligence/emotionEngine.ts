@@ -50,6 +50,51 @@ export interface StyleProfile {
   emojiHint?: string;
 }
 
+export class EmotionEngine {
+  private history: Array<{ emotion: Emotion; ts: number }> = [];
+  private readonly STORAGE_KEY = 'sofia_emotion_history_v1';
+
+  constructor() {
+    this.load();
+  }
+
+  private load() {
+    try {
+      const saved = localStorage.getItem(this.STORAGE_KEY);
+      if (saved) this.history = JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to load emotion history', e);
+    }
+  }
+
+  private save() {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.history.slice(-100)));
+    } catch (e) {
+      console.error('Failed to save emotion history', e);
+    }
+  }
+
+  recordEmotion(text: string) {
+    const { emotion } = detectEmotion(text);
+    this.history.push({ emotion, ts: Date.now() });
+    this.save();
+    return emotion;
+  }
+
+  getTrend(): Emotion {
+    if (this.history.length === 0) return 'neutral';
+    const recent = this.history.slice(-10);
+    const counts: Record<Emotion, number> = {} as any;
+    recent.forEach(h => counts[h.emotion] = (counts[h.emotion] || 0) + 1);
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] as Emotion;
+  }
+
+  getHistory() {
+    return this.history;
+  }
+}
+
 export function generateStyleProfile(text: string): StyleProfile {
   const { emotion } = detectEmotion(text);
   const urgency = detectUrgency(text);
