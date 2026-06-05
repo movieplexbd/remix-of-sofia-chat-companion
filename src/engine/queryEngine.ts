@@ -686,5 +686,18 @@ export function createSofiaEngine(
     return { answer: noMatch(inputText), method: null, score: 0, sentiment };
   }
 
-  return { getReply, bm25M, tfidfM, coMatrix, rebuildModels, intel };
+  function recordFeedback(firebaseKey: string, isPositive: boolean, category?: string) {
+    intel.recordClick(RT.lastUserQ || '', firebaseKey, []);
+    if (category) intel.recordOutcome(category, isPositive ? 1 : 0);
+    if (!isPositive && RT.lastUserQ) {
+      const topic = (RT.lastUserQ.split(/\s+/)[0] || '').slice(0, 24);
+      if (topic) intel.curiosity.requestLearning(topic, 'bn');
+    }
+  }
+
+  return {
+    getReply, bm25M, tfidfM, coMatrix, rebuildModels, intel,
+    lastMindTrace: () => _lastMindTrace,
+    recordFeedback,
+  };
 }
