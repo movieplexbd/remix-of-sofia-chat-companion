@@ -34,7 +34,8 @@ export default function Admin() {
       getQA: () => admin.all.qaData || {},
       applyVariant: (key, variants) => admin.mergeIntoQA(key, variants),
     });
-    return () => stopAutoTrainer();
+    startAutoImprovement(getSharedIntel());
+    return () => { stopAutoTrainer(); stopAutoImprovement(); };
   }, [unlocked, admin]);
 
   if (!unlocked) return <AdminLogin onUnlock={() => setUnlocked(true)} />;
