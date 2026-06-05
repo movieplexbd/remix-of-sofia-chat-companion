@@ -38,6 +38,13 @@ import { detectTopics, topicBoost, type TopicHit } from './topicDetector';
 import { ContradictionStore }           from './contradictionDetector';
 import { aggregate, type AggregatedEvidence } from './evidenceAggregator';
 
+// v6.5 additions — Autonomous Mind
+import { InferenceEngine }              from './inferenceEngine';
+import { ActiveLearningEngine }         from './activeLearningEngine';
+import { CuriosityEngine }              from './curiosityEngine';
+import { MetaCognition }                from './metaCognition';
+import { think, type MindTrace, type MindInput } from './autonomousMind';
+
 export interface UnderstoodQuery {
   raw: string;
   meta: QueryMeta;
