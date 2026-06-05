@@ -51,6 +51,9 @@ export default function Admin() {
         {admin.busy && !Object.keys(admin.all.qaData || {}).length ? (
           <div className="text-sm text-muted-foreground">Loading…</div>
         ) : tab === 'dashboard' ? <DashboardTab admin={admin} />
+          : tab === 'mind' ? <MindTab />
+          : tab === 'graph' ? <GraphTab />
+          : tab === 'tests' ? <TestsTab />
           : tab === 'qa' ? <QATab admin={admin} />
           : tab === 'bulk' ? <BulkTab admin={admin} />
           : tab === 'trainer' ? <AutoTrainerTab admin={admin} />
