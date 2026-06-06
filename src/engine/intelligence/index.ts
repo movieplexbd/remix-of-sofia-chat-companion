@@ -139,6 +139,9 @@ export interface IntelligenceAPI {
   semantic: SemanticMemory;
   emotion: EmotionEngine;
   decision: DecisionEngine; // Phase 21
+  causal: CausalEngine;
+  temporal: TemporalEngine;
+  storage: StorageEngine;
 }
 
 export function createIntelligence(userSyn: Record<string, string[]> = {}): IntelligenceAPI {
