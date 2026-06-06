@@ -23,7 +23,7 @@ import { buildDefaultGraph, KnowledgeGraph }       from './knowledgeGraph';
 import { ContextMemory }                           from './contextMemory';
 import { rank, type RawCandidate, type RankedResult } from './rankingPipeline';
 import { reinforce, penalize, getAllWeights, resetWeights } from './adaptiveScoring';
-import { recordEvent, feedbackBoost, topClicked, topQueries, clearFeedback, snapshot } from './feedbackLearning';
+import { recordEvent, feedbackBoost, topClicked, topQueries, clearFeedback, snapshot, getStats as fbGetStats, recordOutcome as fbRecordOutcome } from './feedbackLearning';
 import { LRUCache }                                from './lruCache';
 import { ReasoningEngine, type ReasoningResult }   from './reasoningEngine';
 import { generateExplanation, type Explanation }   from './explanationEngine';
