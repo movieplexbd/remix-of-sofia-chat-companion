@@ -117,7 +117,7 @@ export async function pullFromFirebase(): Promise<{
     const known = new Set(intel.active.learnedList().map(x => x.topic));
     for (const x of arr) {
       if (x?.topic && !known.has(x.topic)) {
-        intel.active.recordLearned?.(x.topic, x.fact || '');
+        intel.active.saveLearnedFact(x.topic, x.content || x.fact || 'imported');
         lN++;
       }
     }
