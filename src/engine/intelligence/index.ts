@@ -305,10 +305,7 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
     cacheGet: (q) => resultCache.get(q),
     cacheSet: (q, r) => resultCache.set(q, r),
     clearCaches: () => { resultCache.clear(); queryCache.clear(); },
-    getFeedbackStats: () => {
-      const { getStats } = require('./feedbackLearning');
-      return getStats();
-    },
+    getFeedbackStats: () => fbGetStats(),
 
     getDiagnostics: () => ({
       weights: getAllWeights(),
