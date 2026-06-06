@@ -3,14 +3,15 @@ import { Link } from 'react-router-dom';
 import {
   LayoutDashboard, MessageSquarePlus, Upload, BookA, Brain,
   Tag, Settings, BarChart3, Lightbulb, ArrowLeft, Database, LogOut,
-  Wrench, Save, Brain as BrainIcon, Network, FlaskConical,
+  Wrench, Save, Brain as BrainIcon, Network, FlaskConical, Crown,
 } from 'lucide-react';
 
 export type AdminTab =
   | 'dashboard' | 'qa' | 'bulk' | 'synonyms' | 'intents'
   | 'entities' | 'config' | 'analytics' | 'insights'
   | 'power' | 'backup' | 'trainer' | 'characters' | 'slides'
-  | 'mind' | 'graph' | 'tests' | 'templates' | 'spell' | 'sentiment';
+  | 'mind' | 'graph' | 'tests' | 'templates' | 'spell' | 'sentiment'
+  | 'master' | 'ontology' | 'concepts' | 'facts';
 
 interface Props {
   active: AdminTab;
@@ -21,6 +22,7 @@ interface Props {
 
 const TABS: { id: AdminTab; label: string; icon: any }[] = [
   { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+  { id: 'master', label: '★ Master', icon: Crown },
   { id: 'mind', label: 'Mind', icon: BrainIcon },
   { id: 'graph', label: 'Knowledge Graph', icon: Network },
   { id: 'tests', label: 'Intelligence Tests', icon: FlaskConical },
@@ -32,6 +34,9 @@ const TABS: { id: AdminTab; label: string; icon: any }[] = [
   { id: 'synonyms', label: 'Synonyms', icon: BookA },
   { id: 'intents', label: 'Intents', icon: Brain },
   { id: 'entities', label: 'Entities', icon: Tag },
+  { id: 'concepts', label: 'Concepts', icon: Brain },
+  { id: 'ontology', label: 'Ontology', icon: Network },
+  { id: 'facts', label: 'Facts', icon: Database },
   { id: 'config', label: 'Config', icon: Settings },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'insights', label: 'Insights', icon: Lightbulb },

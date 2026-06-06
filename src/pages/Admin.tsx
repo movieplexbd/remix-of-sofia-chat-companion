@@ -19,6 +19,7 @@ import TestsTab from '../components/admin/TestsTab';
 import OntologyTab from '../components/admin/OntologyTab';
 import ConceptsTab from '../components/admin/ConceptsTab';
 import FactsTab from '../components/admin/FactsTab';
+import MasterTab from '../components/admin/MasterTab';
 import { useAdmin } from '../hooks/useAdmin';
 import { startAutoTrainer, stopAutoTrainer } from '../engine/intelligence/autoTrainer';
 import { startAutoImprovement, stopAutoImprovement } from '../engine/intelligence/autonomousImprovement';
@@ -54,6 +55,7 @@ export default function Admin() {
         {admin.busy && !Object.keys(admin.all.qaData || {}).length ? (
           <div className="text-sm text-muted-foreground">Loading…</div>
         ) : tab === 'dashboard' ? <DashboardTab admin={admin} />
+          : tab === 'master' ? <MasterTab admin={admin} />
           : tab === 'mind' ? <MindTab />
           : tab === 'graph' ? <GraphTab />
           : tab === 'tests' ? <TestsTab />
