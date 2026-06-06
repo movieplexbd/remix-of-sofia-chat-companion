@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getDatabase, ref, get, update, push, set, serverTimestamp } from 'firebase/database';
 import type { Database } from 'firebase/database';
 import { firebaseConfig } from '../constants/firebaseConfig';
@@ -54,7 +54,7 @@ export function useFirebase() {
     let cancelled = false;
     async function load() {
       try {
-        const app = initializeApp(firebaseConfig);
+        const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
         const db = getDatabase(app);
         dbRef.current = db;
 
