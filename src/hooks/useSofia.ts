@@ -107,25 +107,36 @@ export function useSofia(data: DataStore | null, db: Database | null) {
       setMessages(prev => [...prev, userMsg]);
     }
     setIsTyping(true);
-    await new Promise(r => setTimeout(r, 300 + Math.random() * 300));
-    const reply = await engine.getReply(text);
-    const { main, extra } = data?.cfg.features?.answerChunking !== false
-      ? chunkAnswer(reply.answer)
-      : { main: reply.answer, extra: null };
-    const botMsg: Message = {
-      id: makeId(), sender: 'bot', text: main, timestamp: new Date(),
-      firebaseKey: reply.firebaseKey, method: reply.method,
-      score: reply.score, sentiment: reply.sentiment,
-      related: reply.related, spellCorrected: reply.spellCorrected,
-      originalText: reply.originalText, isMath: reply.isMath,
-      quickReplies: reply.quickReplies, threadId,
-    };
-    setMessages(prev => [...prev, botMsg]);
-    setIsTyping(false);
-    if (extra) {
-      return { extraMessage: { id: makeId(), sender: 'bot' as const, text: extra, timestamp: new Date(), threadId } };
+    try {
+      await new Promise(r => setTimeout(r, 300 + Math.random() * 300));
+      const reply = await engine.getReply(text);
+      const { main, extra } = data?.cfg.features?.answerChunking !== false
+        ? chunkAnswer(reply.answer)
+        : { main: reply.answer, extra: null };
+      const botMsg: Message = {
+        id: makeId(), sender: 'bot', text: main, timestamp: new Date(),
+        firebaseKey: reply.firebaseKey, method: reply.method,
+        score: reply.score, sentiment: reply.sentiment,
+        related: reply.related, spellCorrected: reply.spellCorrected,
+        originalText: reply.originalText, isMath: reply.isMath,
+        quickReplies: reply.quickReplies, threadId,
+      };
+      setMessages(prev => [...prev, botMsg]);
+      if (extra) {
+        return { extraMessage: { id: makeId(), sender: 'bot' as const, text: extra, timestamp: new Date(), threadId } };
+      }
+      return null;
+    } catch (err) {
+      console.error('[Sofia] getReply error:', err);
+      setMessages(prev => [...prev, {
+        id: makeId(), sender: 'bot' as const,
+        text: 'দুঃখিত, একটু সমস্যা হলো। আবার চেষ্টা করো।',
+        timestamp: new Date(), threadId,
+      }]);
+      return null;
+    } finally {
+      setIsTyping(false);
     }
-    return null;
   }, [engine, data]);
 
   const sendMessage = useCallback(async (text: string) => {
@@ -177,16 +188,24 @@ export function useSofia(data: DataStore | null, db: Database | null) {
   const retryMessage = useCallback(async (originalText: string) => {
     if (!engine) return;
     setIsTyping(true);
-    await new Promise(r => setTimeout(r, 350));
-    const reply = await engine.getReply(originalText);
-    const botMsg: Message = {
-      id: makeId(), sender: 'bot', text: reply.answer, timestamp: new Date(),
-      firebaseKey: reply.firebaseKey, method: reply.method,
-      score: reply.score, sentiment: reply.sentiment,
-      related: reply.related,
-    };
-    setMessages(prev => [...prev, botMsg]);
-    setIsTyping(false);
+    try {
+      await new Promise(r => setTimeout(r, 350));
+      const reply = await engine.getReply(originalText);
+      const botMsg: Message = {
+        id: makeId(), sender: 'bot', text: reply.answer, timestamp: new Date(),
+        firebaseKey: reply.firebaseKey, method: reply.method,
+        score: reply.score, sentiment: reply.sentiment,
+        related: reply.related,
+      };
+      setMessages(prev => [...prev, botMsg]);
+    } catch (err) {
+      console.error('[Sofia] retryMessage error:', err);
+      setMessages(prev => [...prev, {
+        id: makeId(), sender: 'bot' as const, text: 'দুঃখিত, আবার চেষ্টা করো।', timestamp: new Date(),
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
   }, [engine]);
 
   const getWelcomeMessage = useCallback((): Message => {
