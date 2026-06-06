@@ -718,8 +718,6 @@ export function createSofiaEngine(
   function recordFeedback(firebaseKey: string, isPositive: boolean, category?: string) {
     intel.recordClick(RT.lastUserQ || '', firebaseKey, []);
     intel.recordOutcome(category || 'general', isPositive ? 1 : 0);
-    const { recordOutcome } = require('./intelligence/feedbackLearning');
-    recordOutcome(isPositive);
     if (!isPositive && RT.lastUserQ) {
       const topic = (RT.lastUserQ.split(/\s+/)[0] || '').slice(0, 24);
       if (topic) intel.curiosity.requestLearning(topic, 'bn');

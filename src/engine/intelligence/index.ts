@@ -23,7 +23,7 @@ import { buildDefaultGraph, KnowledgeGraph }       from './knowledgeGraph';
 import { ContextMemory }                           from './contextMemory';
 import { rank, type RawCandidate, type RankedResult } from './rankingPipeline';
 import { reinforce, penalize, getAllWeights, resetWeights } from './adaptiveScoring';
-import { recordEvent, feedbackBoost, topClicked, topQueries, clearFeedback, snapshot } from './feedbackLearning';
+import { recordEvent, feedbackBoost, topClicked, topQueries, clearFeedback, snapshot, getStats as fbGetStats, recordOutcome as fbRecordOutcome } from './feedbackLearning';
 import { LRUCache }                                from './lruCache';
 import { ReasoningEngine, type ReasoningResult }   from './reasoningEngine';
 import { generateExplanation, type Explanation }   from './explanationEngine';
@@ -139,6 +139,9 @@ export interface IntelligenceAPI {
   semantic: SemanticMemory;
   emotion: EmotionEngine;
   decision: DecisionEngine; // Phase 21
+  causal: CausalEngine;
+  temporal: TemporalEngine;
+  storage: StorageEngine;
 }
 
 export function createIntelligence(userSyn: Record<string, string[]> = {}): IntelligenceAPI {
@@ -302,10 +305,7 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
     cacheGet: (q) => resultCache.get(q),
     cacheSet: (q, r) => resultCache.set(q, r),
     clearCaches: () => { resultCache.clear(); queryCache.clear(); },
-    getFeedbackStats: () => {
-      const { getStats } = require('./feedbackLearning');
-      return getStats();
-    },
+    getFeedbackStats: () => fbGetStats(),
 
     getDiagnostics: () => ({
       weights: getAllWeights(),
@@ -330,7 +330,7 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
       inference.clear(); curiosity.clear(); active.clear(); meta.clear();
     },
 
-    think: (input) => think(input, { graph, concepts, multiHop, inference, curiosity, active, meta }),
+    think: (input) => think(input, { graph, concepts, multiHop, inference, curiosity, active, meta, decision }),
     runInference: (depth = 3) => inference.inferRelations(depth),
     recordOutcome: (domain, success) => meta.observe(domain, success),
     logReasoning: (trace: any) => {
