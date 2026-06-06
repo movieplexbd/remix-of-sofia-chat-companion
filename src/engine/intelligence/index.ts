@@ -50,6 +50,9 @@ import { ActiveLearningEngine }         from './activeLearningEngine';
 import { CuriosityEngine }              from './curiosityEngine';
 import { MetaCognition }                from './metaCognition';
 import { think, type MindTrace, type MindInput } from './autonomousMind';
+import { CausalEngine }                 from './causalEngine';
+import { TemporalEngine }               from './temporalEngine';
+import { StorageEngine }                from './storageEngine';
 
 export interface UnderstoodQuery {
   raw: string;
@@ -156,6 +159,9 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
   const semantic = new SemanticMemory();
   const emotion = new EmotionEngine();
   const decision = new DecisionEngine(); // Phase 21
+  const causal = new CausalEngine();
+  const temporal = new TemporalEngine();
+  const storage = new StorageEngine();
   const resultCache = new LRUCache<string, RankedResult[]>(80, 'results');
   const queryCache  = new LRUCache<string, UnderstoodQuery>(120, 'queries');
 
