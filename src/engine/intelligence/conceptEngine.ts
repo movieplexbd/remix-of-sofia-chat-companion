@@ -114,4 +114,9 @@ export class ConceptEngine {
     this.reindex();
     this.save();
   }
+  /** Convenience: create a concept from id + aliases (used by admin UI) */
+  add(id: string, aliases: string[], related: string[] = []) {
+    this.addConcept({ id, name: id, aliases, related, learningScore: 0.5, importanceScore: 0.5 });
+  }
+  remove(id: string) { this.removeConcept(id); }
 }
