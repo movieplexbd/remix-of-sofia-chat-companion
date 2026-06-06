@@ -333,7 +333,7 @@ export function createIntelligence(userSyn: Record<string, string[]> = {}): Inte
       inference.clear(); curiosity.clear(); active.clear(); meta.clear();
     },
 
-    think: (input) => think(input, { graph, concepts, multiHop, inference, curiosity, active, meta }),
+    think: (input) => think(input, { graph, concepts, multiHop, inference, curiosity, active, meta, decision }),
     runInference: (depth = 3) => inference.inferRelations(depth),
     recordOutcome: (domain, success) => meta.observe(domain, success),
     logReasoning: (trace: any) => {
