@@ -41,3 +41,12 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </ErrorBoundary>
 );
+
+// Background: pull shared training data once per session (non-blocking, errors ignored)
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    import('./lib/firebaseTraining')
+      .then(m => m.pullFromFirebase())
+      .catch(() => {/* silent */});
+  }, 4000);
+}
